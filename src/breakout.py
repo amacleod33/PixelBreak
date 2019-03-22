@@ -116,6 +116,23 @@ class Ball(pygame.sprite.Sprite):
                 self.hit = not self.hit
         self.vector = (angle, z)
 
+class Brick(pygame.sprite.Sprite):
+    def __init__(self, side):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = load_png('basic_block.png')
+        self.rect = self.image.get_rect()
+        screen = pygame.display.get_surface()
+        self.area = screen.get_rect()
+        self.side = side
+        self.speed = 0
+        self.health = 100
+        self.state = 'Still'
+        self.reinit()
+
+    def reinit(self):
+        self.state = "still"
+        self.movepos = [0, 0]
+
 def main():
     # Initialize screen
     pygame.init()
@@ -132,7 +149,9 @@ def main():
     player1 = Paddle('left')
 
     # Initialize ball
-    speed = 15
+
+    speed = 30
+
     rand = 0.1 * random.randint(5, 8)
     ball = Ball((0.70, speed))
 
@@ -146,6 +165,9 @@ def main():
 
     # Initialize clock
     clock = pygame.time.Clock()
+
+    # Initialize brick
+    brick = 1
 
     # Event loop
     while True:
@@ -175,3 +197,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
