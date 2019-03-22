@@ -127,9 +127,22 @@ class Brick(pygame.sprite.Sprite):
         self.state = 'Still'
         self.reinit()
 
+        def reinit(self):
+            self.state = "still"
+            self.movepos = [0, 0]
+            if self.side == "left":
+                self.rect.midbottom = self.area.midbottom
+            elif self.side == "right":
+                self.rect.midright = self.area.midright
+
+
+
     def reinit(self):
         self.state = "still"
         self.movepos = [0, 0]
+        if self.side == "center":
+            self.rect.midtop = self.area.midtop
+
 
 def main():
     # Initialize screen
@@ -151,9 +164,13 @@ def main():
     rand = 0.1 * random.randint(5, 8)
     ball = Ball((0.70, speed))
 
+    # Initialize brick
+    brick = Brick('center')
+
     # Initialize sprites
     playersprites = pygame.sprite.RenderPlain((player1))
     ballsprite = pygame.sprite.RenderPlain(ball)
+    bricksprite = pygame.sprite.RenderPlain(brick)
 
     # Blit everything to the screen
     screen.blit(background, (0, 0))
@@ -162,8 +179,7 @@ def main():
     # Initialize clock
     clock = pygame.time.Clock()
 
-    # Initialize brick
-    brick = 
+
 
     # Event loop
     while True:
@@ -185,10 +201,13 @@ def main():
 
         screen.blit(background, ball.rect, ball.rect)
         screen.blit(background, player1.rect, player1.rect)
+        screen.blit(background, brick.rect, brick.rect)
         ballsprite.update()
         playersprites.update()
+        bricksprite.update()
         ballsprite.draw(screen)
         playersprites.draw(screen)
+        bricksprite.draw(screen)
         pygame.display.flip()
 
 if __name__ == '__main__':
