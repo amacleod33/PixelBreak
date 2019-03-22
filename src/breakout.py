@@ -7,7 +7,7 @@ from pygame.locals import *
 
 def load_png(name):
     """ Load image and return image object"""
-    fullname = os.path.join('../img', name)
+    fullname = os.path.join('.\\img', name)
     try:
         image = pygame.image.load(fullname)
         if image.get_alpha is None:
@@ -92,9 +92,11 @@ class Ball(pygame.sprite.Sprite):
             tr = not self.area.collidepoint(newpos.topright)
             bl = not self.area.collidepoint(newpos.bottomleft)
             br = not self.area.collidepoint(newpos.bottomright)
-            if (br and bl):
+            if newpos.bottomleft[1] > self.area.bottom:
+                pass
+            elif (tr and tl) or (br and bl):
                 angle = -angle
-            if (br and bl):
+            elif (tl and bl) or (tr and br):
                 angle = math.pi - angle
 
         else:
@@ -153,14 +155,16 @@ def main():
     # Fill background
     background = pygame.Surface(screen.get_size())
     background = background.convert()
-    background.fill((0, 0, 0))
+    background.fill((0, 0, 255))
 
     # Initialize players
     global player1
     player1 = Paddle('left')
 
     # Initialize ball
+
     speed = 30
+
     rand = 0.1 * random.randint(5, 8)
     ball = Ball((0.70, speed))
 
@@ -178,7 +182,6 @@ def main():
 
     # Initialize clock
     clock = pygame.time.Clock()
-
 
 
     # Event loop
