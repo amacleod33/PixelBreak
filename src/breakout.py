@@ -5,6 +5,9 @@ import os
 import pygame
 from pygame.locals import *
 
+global block_sprite_path_strings
+block_sprite_path_strings = ["basic_block.png", "med_block.png", "hard_block.png"]
+
 def load_png(name):
     """ Load image and return image object"""
     fullname = os.path.join('.\\img', name)
@@ -17,6 +20,11 @@ def load_png(name):
         return image
     except pygame.error:
         print('Cannot load image:', fullname)
+
+def get_sound_path(name):
+    """ Load image and return image object"""
+    fullname = os.path.join('.\\audio', name)
+    return fullname
 
 def calcnewpos(rect, vector):
     (angle, z) = vector
@@ -74,7 +82,7 @@ class Ball(pygame.sprite.Sprite):
         self.image = load_png('ball.png')
         self.rect = self.image.get_rect()
         screen = pygame.display.get_surface()
-        self.rect.center = (320, 240)
+        self.rect.center = (320, 420)
         self.area = screen.get_rect()
         self.vector = vector
         self.hit = 0
@@ -99,30 +107,43 @@ class Ball(pygame.sprite.Sprite):
         else:
             # Deflate the rectangles so you can't catch a ball behind the bat
             player.rect.inflate(-3, -3)
-
-
             # Do ball and bat collide?
             # Note I put in an odd rule that sets self.hit to 1 when they collide, and unsets it in the next
             # iteration. this is to stop odd ball behaviour where it finds a collision *inside* the
             # bat, the ball reverses, and is still inside the bat, so bounces around inside.
             # This way, the ball can always escape and bounce away cleanly
             if self.rect.colliderect(player.rect) and not self.hit:
-                angle = math.pi - angle
-
+                #angle = math.pi - angle
+                angle = -angle
+                audio_ball_hit.play()
                 self.hit = not self.hit
             elif self.hit:
                 self.hit = not self.hit
 
-            if self.rect.colliderect(brick.rect):
-                angle = math.pi - angle
-                brick.health = brick.health - 1
+            targetbrick = pygame.sprite.spritecollideany(self, bricks)
+            if targetbrick is not None:
+                angle = -angle
+                audio_brick_hit.play()
+                targetbrick.health -= 1
+                if targetbrick.health < 1:
+                    targetbrick.image.fill((0,0,0))
+                    bricks.remove(targetbrick)
+
+            #####
+            # if self.rect.colliderect(brick.rect):
+            #     angle = math.pi - angle
+            #     brick.health = brick.health - 1
+            #     if brick.health == 0:
+            #         brick.rect.w = 0
+            #         brick.rect.h = 0
+
 
         self.vector = (angle, z)
 
 class Brick(pygame.sprite.Sprite):
     def __init__(self, side, health):
         pygame.sprite.Sprite.__init__(self)
-        self.image = load_png('basic_block.png')
+        self.image = load_png(block_sprite_path_strings[health-1])
         self.rect = self.image.get_rect()
         screen = pygame.display.get_surface()
         self.area = screen.get_rect()
@@ -135,12 +156,20 @@ class Brick(pygame.sprite.Sprite):
     def reinit(self):
         self.state = "still"
         self.movepos = [0, 0]
+
+
         if self.side == "left":
-            self.rect.midbottom = self.area.midbottom
+            self.rect.midleft = self.area.midleft
+        elif self.side == "center":
+            self.rect.center = self.area.center
         elif self.side == "right":
             self.rect.midright = self.area.midright
-        elif self.side == "center":
+        elif self.side == "topleft":
+            self.rect.topleft = self.area.topleft
+        elif self.side == "topcenter":
             self.rect.midtop = self.area.midtop
+        elif self.side == "topright":
+            self.rect.topright = self.area.topright
 
 
 def main():
@@ -152,7 +181,7 @@ def main():
     # Fill background
     background = pygame.Surface(screen.get_size())
     background = background.convert()
-    background.fill((0, 0, 255))
+    background.fill((0, 0, 0))
 
     # Initialize players
     global player
@@ -160,18 +189,27 @@ def main():
 
     # Initialize ball
 
-    speed = 12
+    speed = 10
     rand = 0.1 * random.randint(5, 8)
-    ball = Ball((1.5708, speed))
+    ball = Ball((.7, speed))
 
-    # Initialize brick
-    global brick
-    brick = Brick('right', 3)
+    # Initialize bricks
+    global bricks
+    bricks = pygame.sprite.Group()
+    brick0 = Brick('topleft', 2)
+    brick1 = Brick('topcenter', 2)
+    brick2 = Brick('topright', 2)
+    brick3 = Brick("left", 1)
+    brick4 = Brick('center', 1)
+    brick5 = Brick('right', 1)
+
+    bricks.add(brick0,brick1,brick2,brick3,brick4,brick5)
+
 
     # Initialize sprites
     playersprites = pygame.sprite.RenderPlain((player))
+    bricksprite = pygame.sprite.RenderPlain(bricks)
     ballsprite = pygame.sprite.RenderPlain(ball)
-    bricksprite = pygame.sprite.RenderPlain(brick)
 
     # Blit everything to the screen
     screen.blit(background, (0, 0))
@@ -180,6 +218,13 @@ def main():
     # Initialize clock
     clock = pygame.time.Clock()
 
+    #Initialize sound
+    #global audio
+    #audio = pygame.mixer(frequency=22050, size=-16, channels=2, buffer=4096)
+    global audio_ball_hit
+    audio_ball_hit = pygame.mixer.Sound(get_sound_path("sfx_sounds_Blip4.wav"))
+    global audio_brick_hit
+    audio_brick_hit = pygame.mixer.Sound(get_sound_path("sfx_damage_hit1.wav"))
 
     # Event loop
     while True:
@@ -199,15 +244,18 @@ def main():
                 if event.key == pygame.K_RIGHT or event.key == pygame.K_LEFT:
                     player.still()
 
+        bricks.draw(background)
         screen.blit(background, ball.rect, ball.rect)
         screen.blit(background, player.rect, player.rect)
-        screen.blit(background, brick.rect, brick.rect)
-        ballsprite.update()
-        playersprites.update()
+
         bricksprite.update()
-        ballsprite.draw(screen)
-        playersprites.draw(screen)
+        playersprites.update()
+        ballsprite.update()
+
         bricksprite.draw(screen)
+        playersprites.draw(screen)
+        ballsprite.draw(screen)
+
         pygame.display.flip()
 
 if __name__ == '__main__':
