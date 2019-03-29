@@ -97,9 +97,11 @@ class Ball(pygame.sprite.Sprite):
             tr = not self.area.collidepoint(newpos.topright)
             bl = not self.area.collidepoint(newpos.bottomleft)
             br = not self.area.collidepoint(newpos.bottomright)
-            if newpos.bottomleft[1] > self.area.bottom:
-                pass
-            elif (tr and tl) or (br and bl):
+            if newpos.midbottom[1] > self.area.bottom:
+                self.rect.x = 320
+                self.rect.y = 420
+                self.vector = (.7, 0)
+            elif (tr and tl):
                 angle = -angle
             elif (tl and bl) or (tr and br):
                 angle = math.pi - angle
@@ -122,8 +124,18 @@ class Ball(pygame.sprite.Sprite):
 
             targetbrick = pygame.sprite.spritecollideany(self, bricks)
             if targetbrick is not None:
-                angle = -angle
                 audio_brick_hit.play()
+
+                tl = targetbrick.rect.collidepoint(newpos.topleft)
+                tr = targetbrick.rect.collidepoint(newpos.topright)
+                bl = targetbrick.rect.collidepoint(newpos.bottomleft)
+                br = targetbrick.rect.collidepoint(newpos.bottomright)
+
+                if (tr and tl) or (br and bl):
+                    angle = -angle
+                elif (tl or bl) or (tr or br):
+                    angle = math.pi - angle
+
                 targetbrick.health -= 1
                 if targetbrick.health < 1:
                     targetbrick.image.fill((0,0,0))
@@ -189,7 +201,7 @@ def main():
 
     # Initialize ball
 
-    speed = 10
+    speed = 6
     rand = 0.1 * random.randint(5, 8)
     ball = Ball((.7, speed))
 
