@@ -30,13 +30,12 @@ class Paddle(pygame.sprite.Sprite):
     Functions: reinit, update, moveup, movedown
     Attributes: which, speed"""
 
-    def __init__(self, side):
+    def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         self.image = load_png('paddle.png')
         self.rect = self.image.get_rect()
         screen = pygame.display.get_surface()
         self.area = screen.get_rect()
-        self.side = side
         self.speed = 20
         self.state = "still"
         self.reinit()
@@ -44,10 +43,7 @@ class Paddle(pygame.sprite.Sprite):
     def reinit(self):
         self.state = "still"
         self.movepos = [0, 0]
-        if self.side == "left":
-            self.rect.midbottom = self.area.midbottom
-        elif self.side == "right":
-            self.rect.midright = self.area.midright
+        self.rect.midbottom = self.area.midbottom
 
     def update(self):
         newpos = self.rect.move(self.movepos)
@@ -78,6 +74,7 @@ class Ball(pygame.sprite.Sprite):
         self.image = load_png('ball.png')
         self.rect = self.image.get_rect()
         screen = pygame.display.get_surface()
+        self.rect.center = (320, 240)
         self.area = screen.get_rect()
         self.vector = vector
         self.hit = 0
@@ -101,7 +98,7 @@ class Ball(pygame.sprite.Sprite):
 
         else:
             # Deflate the rectangles so you can't catch a ball behind the bat
-            player1.rect.inflate(-3, -3)
+            player.rect.inflate(-3, -3)
 
 
             # Do ball and bat collide?
@@ -109,15 +106,21 @@ class Ball(pygame.sprite.Sprite):
             # iteration. this is to stop odd ball behaviour where it finds a collision *inside* the
             # bat, the ball reverses, and is still inside the bat, so bounces around inside.
             # This way, the ball can always escape and bounce away cleanly
-            if self.rect.colliderect(player1.rect) == 1 and not self.hit:
+            if self.rect.colliderect(player.rect) and not self.hit:
                 angle = math.pi - angle
+
                 self.hit = not self.hit
             elif self.hit:
                 self.hit = not self.hit
+
+            if self.rect.colliderect(brick.rect):
+                angle = math.pi - angle
+                brick.health = brick.health - 1
+
         self.vector = (angle, z)
 
 class Brick(pygame.sprite.Sprite):
-    def __init__(self, side):
+    def __init__(self, side, health):
         pygame.sprite.Sprite.__init__(self)
         self.image = load_png('basic_block.png')
         self.rect = self.image.get_rect()
@@ -125,24 +128,18 @@ class Brick(pygame.sprite.Sprite):
         self.area = screen.get_rect()
         self.side = side
         self.speed = 0
-        self.health = 100
+        self.health = health
         self.state = 'Still'
         self.reinit()
-
-        def reinit(self):
-            self.state = "still"
-            self.movepos = [0, 0]
-            if self.side == "left":
-                self.rect.midbottom = self.area.midbottom
-            elif self.side == "right":
-                self.rect.midright = self.area.midright
-
-
 
     def reinit(self):
         self.state = "still"
         self.movepos = [0, 0]
-        if self.side == "center":
+        if self.side == "left":
+            self.rect.midbottom = self.area.midbottom
+        elif self.side == "right":
+            self.rect.midright = self.area.midright
+        elif self.side == "center":
             self.rect.midtop = self.area.midtop
 
 
@@ -158,21 +155,21 @@ def main():
     background.fill((0, 0, 255))
 
     # Initialize players
-    global player1
-    player1 = Paddle('left')
+    global player
+    player = Paddle()
 
     # Initialize ball
 
-    speed = 30
-
+    speed = 12
     rand = 0.1 * random.randint(5, 8)
-    ball = Ball((0.70, speed))
+    ball = Ball((1.5708, speed))
 
     # Initialize brick
-    brick = Brick('center')
+    global brick
+    brick = Brick('right', 3)
 
     # Initialize sprites
-    playersprites = pygame.sprite.RenderPlain((player1))
+    playersprites = pygame.sprite.RenderPlain((player))
     ballsprite = pygame.sprite.RenderPlain(ball)
     bricksprite = pygame.sprite.RenderPlain(brick)
 
@@ -194,16 +191,16 @@ def main():
                 return
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RIGHT:
-                    player1.moveright()
+                    player.moveright()
                 if event.key == pygame.K_LEFT:
-                    player1.moveleft()
+                    player.moveleft()
 
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_RIGHT or event.key == pygame.K_LEFT:
-                    player1.still()
+                    player.still()
 
         screen.blit(background, ball.rect, ball.rect)
-        screen.blit(background, player1.rect, player1.rect)
+        screen.blit(background, player.rect, player.rect)
         screen.blit(background, brick.rect, brick.rect)
         ballsprite.update()
         playersprites.update()
