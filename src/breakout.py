@@ -97,30 +97,48 @@ class Ball(pygame.sprite.Sprite):
             tr = not self.area.collidepoint(newpos.topright)
             bl = not self.area.collidepoint(newpos.bottomleft)
             br = not self.area.collidepoint(newpos.bottomright)
-            if newpos.midbottom[1] > self.area.bottom:
-                self.rect.x = 320
-                self.rect.y = 420
-                self.vector = (.7, 0)
-            elif (tr and tl):
-                angle = -angle
+            if bl and br:
+                raise SystemExit
+                # self.rect.x = 320
+                # self.rect.y = 420
+                # self.vector = (.7, 0)
             elif (tl and bl) or (tr and br):
                 angle = math.pi - angle
+            elif tr and tl:
+                angle = -angle
 
         else:
             # Deflate the rectangles so you can't catch a ball behind the bat
-            player.rect.inflate(-3, -3)
+            #player.rect.inflate(-3, -3)
             # Do ball and bat collide?
             # Note I put in an odd rule that sets self.hit to 1 when they collide, and unsets it in the next
             # iteration. this is to stop odd ball behaviour where it finds a collision *inside* the
             # bat, the ball reverses, and is still inside the bat, so bounces around inside.
             # This way, the ball can always escape and bounce away cleanly
-            if self.rect.colliderect(player.rect) and not self.hit:
-                #angle = math.pi - angle
-                angle = -angle
+            tl = player.rect.collidepoint(newpos.topleft)
+            tr = player.rect.collidepoint(newpos.topright)
+            bl = player.rect.collidepoint(newpos.bottomleft)
+            br = player.rect.collidepoint(newpos.bottomright)
+
+            if (br and bl):
+                # if not self.hit:
+                #     audio_ball_hit.play()
+                #     angle = -angle
+                # else:
+                #     self.hit = not self.hit
+
                 audio_ball_hit.play()
-                self.hit = not self.hit
-            elif self.hit:
-                self.hit = not self.hit
+                angle = -angle
+
+            elif tl or bl or tr or br:
+                # if not self.hit:
+                #     audio_ball_hit.play()
+                #     angle = math.pi - angle
+                # else:
+                #     self.hit = not self.hit
+
+                audio_ball_hit.play()
+                angle = math.pi - angle
 
             targetbrick = pygame.sprite.spritecollideany(self, bricks)
             if targetbrick is not None:
@@ -256,9 +274,9 @@ def main():
                 if event.key == pygame.K_RIGHT or event.key == pygame.K_LEFT:
                     player.still()
 
+        screen.blit(background, player.rect, player.rect)
         bricks.draw(background)
         screen.blit(background, ball.rect, ball.rect)
-        screen.blit(background, player.rect, player.rect)
 
         bricksprite.update()
         playersprites.update()
