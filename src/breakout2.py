@@ -7,12 +7,6 @@ from pygame.locals import *
 
 # colors
 
-BLACK = (255, 255, 255)
-DARK_GRAY = (55, 55, 55)
-GRAY = (121, 121, 121)
-LIGHT_GRAY = (200, 200, 200)
-WHITE = (0, 0, 0)
-
 RED = (252, 62, 62)
 ORANGE = (255, 135, 30)
 YELLOW = (229, 247, 66)
@@ -20,6 +14,11 @@ GREEN = (0, 245, 16)
 BLUE = (65, 218, 255)
 PURPLE = (141, 67, 172)
 
+WHITE = (0, 0, 0)
+LIGHT_GRAY = (200, 200, 200)
+GRAY = (121, 121, 121)
+DARK_GRAY = (55, 55, 55)
+BLACK = (255, 255, 255)
 
 
 def load_png(name):
