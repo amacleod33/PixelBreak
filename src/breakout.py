@@ -204,6 +204,7 @@ class Brick(pygame.sprite.Sprite):
 
 def main():
     # Initialize screen
+    global screen
     pygame.init()
     screen = pygame.display.set_mode((640, 480))
     pygame.display.set_caption('Breakout!')
@@ -236,8 +237,12 @@ def main():
     bricks.add(brick0,brick1,brick2,brick3,brick4,brick5)
 
 
+    global state
+    state = 0
+
     # Initialize sprites
     playersprites = pygame.sprite.RenderPlain((player))
+    global bricksprite
     bricksprite = pygame.sprite.RenderPlain(bricks)
     ballsprite = pygame.sprite.RenderPlain(ball)
 
@@ -255,6 +260,8 @@ def main():
     audio_ball_hit = pygame.mixer.Sound(get_sound_path("sfx_sounds_Blip4.wav"))
     global audio_brick_hit
     audio_brick_hit = pygame.mixer.Sound(get_sound_path("sfx_damage_hit1.wav"))
+    global audio_pause
+    audio_pause = pygame.mixer.Sound(get_sound_path("sfx_sounds_Blip2.wav"))
 
     # Event loop
     while True:
@@ -269,6 +276,14 @@ def main():
                     player.moveright()
                 if event.key == pygame.K_LEFT:
                     player.moveleft()
+                if event.key == pygame.K_SPACE:
+                    audio_pause.play()
+                    if state != 1:
+                        state = 1
+                    else:
+                        state = 0
+                if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
+                    return
 
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_RIGHT or event.key == pygame.K_LEFT:
@@ -278,13 +293,14 @@ def main():
         bricks.draw(background)
         screen.blit(background, ball.rect, ball.rect)
 
-        bricksprite.update()
-        playersprites.update()
-        ballsprite.update()
+        if state < 1:
+            bricksprite.update()
+            playersprites.update()
+            ballsprite.update()
 
-        bricksprite.draw(screen)
-        playersprites.draw(screen)
-        ballsprite.draw(screen)
+            bricksprite.draw(screen)
+            playersprites.draw(screen)
+            ballsprite.draw(screen)
 
         pygame.display.flip()
 
