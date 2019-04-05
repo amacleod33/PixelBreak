@@ -23,7 +23,7 @@ def load_png(name):
 
 def get_sound_path(name):
     """ Load image and return image object"""
-    fullname = os.path.join('.\\audio', name)
+    fullname = os.path.join('audio', name)
     return fullname
 
 def calcnewpos(rect, vector):
