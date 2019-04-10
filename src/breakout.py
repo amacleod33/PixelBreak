@@ -259,7 +259,6 @@ def main():
     # score_surface = font.render(str(score), False, (255, 255, 255))
     # score_pos = score_surface.get_rect(topright=background.get_rect().topright)
 
-
     playersprites = pygame.sprite.RenderPlain((player))
     global bricksprite
     bricksprite = pygame.sprite.RenderPlain(bricks)

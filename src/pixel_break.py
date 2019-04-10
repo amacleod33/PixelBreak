@@ -16,6 +16,7 @@ NAME = "PIXEL BREAK"
 
 BLACK = (0, 0, 0)
 SIZE = WIDTH, HEIGHT = 512, 640
+STARTING_LIVES = 5
 
 #######
 
@@ -67,7 +68,6 @@ def read_board(filename, group):
                     group.add(Brick(int(split_line[j]), (j * 16, (i * 16) + 36)))
                     print(split_line[j])
 
-
 class Ball(pygame.sprite.Sprite):
     def __init__(self, vector):
         pygame.sprite.Sprite.__init__(self)
@@ -78,11 +78,20 @@ class Ball(pygame.sprite.Sprite):
         self.area = screen.get_rect()
         self.vector = vector
 
+        # initialize game state
+        # 0 == play, 1 == paused, 2 == game over, 3 == title
+        # in ball object to allow for manipulation in Ball.update()
+        self.state = 3
+
+        # initialize lives
+        # lives are stored in the balls lmao
+        self.lives = STARTING_LIVES
+
     def update(self):
         # returns a rect for this cycle's ball position
         newpos = calcnewpos(self.rect, self.vector)
         self.rect = newpos
-        (angle, z) = self.vector
+        (angle, velocity) = self.vector
 
         if not self.area.contains(newpos):
             # true if top left point of ball rect is not in the screen area
@@ -97,12 +106,36 @@ class Ball(pygame.sprite.Sprite):
             # true if bottom right point of ball rect is not in the screen area
             br = not self.area.collidepoint(newpos.bottomright)
 
+            if bl and br:
+                self.lives -= 1
+                if self.lives < 1:
+                    # game over
+                    self.state = 2
+
+                else:
+                    self.rect.topleft = ((SIZE[0] / 2) - 8, -(48 - SIZE[1]))
+                    self.vector = (.7, 0)
+                    bar.reinit()
+
+            # going off either side
+            elif (tl and bl) or (tr and br):
+                # flips on y axis
+                angle = math.pi - angle
+
+            # going off the top
+            elif tr and tl:
+                # if also going off the side i.e. hitting a corner
+                if bl or br:
+                    # flips on x/y axes
+                    angle = angle - math.pi
+
+
 
 class Bar(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.surface = load_png("quadbar.png")
-        self.rect = self.surface.get_rect()
+        self.image = load_png("quadbar.png")
+        self.rect = self.image.get_rect()
         screen = pygame.display.get_surface()
         self.area = screen.get_rect()
         self.speed = 20
@@ -137,8 +170,17 @@ class Brick(pygame.sprite.Sprite):
         else:
             print("You should not get here! The hit function should not be called on bricks with 0 HP.")
 
+        if self.hp == 0:
+            # removes from all groups, including the brick group
+            self.kill()
+
+
 
 def main():
+
+    def set_state(state):
+        state = state
+
     # initialize screen
     # screen is global so that the ball can reference its rect to determine acceptable area of movement
     global screen
@@ -149,18 +191,9 @@ def main():
     global background
     background = pygame.Surface(screen.get_size())
     background = background.convert()
-    background.fill(BLACK)
 
-    # initialize title surface and do initial blit
-    # load_png creates and returns a surface object using pygame.image.load()
-    title = load_png("title.png")
-    # gets rectangle for blitting title by get_rect(), specifying center to be x centered to background
-    titlepos = title.get_rect(centerx=background.get_width() / 2)
-    background.blit(title, titlepos)
-
-    # blits background surface onto screen surface
-    screen.blit(background, (0, 0))
-    pygame.display.flip()
+    # initializes must_draw_title, a boolean that stores whether the title screen state is new
+    must_draw_title = True
 
     # initialize clock
     clock = pygame.time.Clock()
@@ -171,33 +204,31 @@ def main():
     # sets mouse cursor not to be visible
     pygame.mouse.set_visible(0)
 
-    # initialize game state
-    # 0 == play, 1 == paused, 2 == game over, 3 == title
-    state = 3
-
     # initialize level
     level = 1
 
-    # initialize lives
-    lives = 5
-
-    # initialize ball and bar
+    # initialize ball
     ball = Ball((0.7, 10))
+
+    # initialize bar
+    # global so the update ball function can reinit as necessary
+    global bar
     bar = Bar()
+
     brick_group = pygame.sprite.Group()
     read_board("board1.txt", brick_group)
 
     # main loop
     while 1:
-        # defines whether entire screen needs updated
-        should_update_entire_screen = False
 
-        # make sure game doesn't run at more than 60 frames per second
-        clock.tick(60)
-
-        # initialize dirty rect list
-        global dirty_rects
+        # initialize list of rects to be painted over with black
         dirty_rects = []
+
+        # initialize list of rects to be updated in final display update
+        clean_rects = []
+
+        # makes sure game doesn't run at more than 60 frames per second
+        clock.tick(60)
 
         for event in pygame.event.get():
             # this enables closing the window
@@ -205,42 +236,78 @@ def main():
                 return
 
             # if a key has been pressed or unpressed
-            if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+            if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
                     return
 
-                # play state
-                if state == 0:
-                    ball.update()
-                    # check for space bar
-
-                # pause state
-                elif state == 1:
-                    pass
+                # if space bar is pressed
+                if event.key == pygame.K_SPACE:
+                    # not 1 == 0, not 0 == 1
+                    ball.state = not ball.state
 
                 # game over state
-                elif state == 2:
+                elif ball.state == 2:
                     # check for enter
                     # change state, reload
                     pass
 
                 # title state
-                elif state == 3:
+                elif ball.state == 3:
+                    if must_draw_title:
+                        pass
+
                     if event.key == pygame.K_RETURN:
-                        state = 0
+                        ball.state = 0
                         # fills in the background surface object
                         background.fill(BLACK)
-                        background.blit(bar.surface, bar.rect)
+                        background.blit(bar.image, bar.rect)
                         background.blit(ball.image, bar.rect)
                         brick_group.draw(background)
                         screen.blit(background, (0, 0))
-                        should_update_entire_screen = True
+                        clean_rects.append(background.get_rect())
 
+            if ball.state == 0:
+                # adds previous locations of bar and ball to list for filling with black
+                dirty_rects.append(ball.rect)
+                dirty_rects.append(bar.rect)
 
-        if not should_update_entire_screen:
-            pygame.display.update(dirty_rects)
-        else:
-            pygame.display.flip()
+                bar.update()
+
+                # ball.update will return either none or Brick.hit()
+                # Brick.hit() will return either none or the rect of a brick that has been destroyed
+                brick_destroyed_rect = ball.update()
+
+                if brick_destroyed_rect is not None:
+                    dirty_rects.append(brick_destroyed_rect)
+
+                for rect in dirty_rects:
+                    background.fill(BLACK, rect=rect)
+
+                background.blit(ball.image, ball.rect)
+                background.blit(bar.image, bar.rect)
+
+                clean_rects.append(ball.rect)
+                clean_rects.append(bar.rect)
+
+            elif ball.state == 3:
+                if must_draw_title:
+                    background.fill(BLACK)
+
+                    # initialize title surface and do initial blit
+                    # load_png creates and returns a surface object using pygame.image.load()
+                    title = load_png("title.png")
+                    # gets rectangle for blitting title by get_rect(), specifying center to be x centered to background
+                    titlepos = title.get_rect(centerx=background.get_width() / 2)
+                    background.blit(title, titlepos)
+
+                    # blits background surface onto screen surface
+                    screen.blit(background, (0, 0))
+
+                    clean_rects.append(titlepos)
+
+                    must_draw_title = False
+
+        pygame.display.update(clean_rects)
 
 
 
