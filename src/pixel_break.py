@@ -12,28 +12,19 @@ pygame.init()
 
 NAME = "PIXEL BREAK"
 
-# colors
-
-RED = (252, 62, 62)
-ORANGE = (255, 135, 30)
-YELLOW = (229, 247, 66)
-GREEN = (0, 245, 16)
-BLUE = (65, 218, 255)
-PURPLE = (141, 67, 172)
-
-WHITE = (255, 255, 255)
-LIGHT_GRAY = (200, 200, 200)
-GRAY = (121, 121, 121)
-DARK_GRAY = (55, 55, 55)
-BLACK = (0, 0, 0)
-
-COLORS = [RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE, BLACK, DARK_GRAY, GRAY, LIGHT_GRAY, WHITE]
-
-
 # game constants
 
-SIZE = WIDTH, HEIGHT = 544, 580
+BLACK = (0, 0, 0)
+SIZE = WIDTH, HEIGHT = 512, 640
 
+#######
+
+
+# CURRENT AS OF 4/10/19 5:15
+# FIX UPDATE IN BALL, JUST STARTED
+
+
+#######
 
 def load_png(name):
     """ Load image and return image object
@@ -44,16 +35,7 @@ def load_png(name):
         if image.get_alpha is None:
             image = image.convert()
         else:
-            # logic adapted from
-            # https://stackoverflow.com/questions/12879225/pygame-applying-transparency-to-an-image-with-alpha
-            surface = pygame.Surface(image.get_size(), depth=24)
-            key = (0, 255, 0)
-            surface.fill(key)
-            surface.set_colorkey(key)
-            surface.blit(image, (0, 0))
-            surface.set_alpha(128)
-            image = surface
-
+            image = image.convert_alpha()
         return image
     except pygame.error:
         print('Cannot load image:', fullname)
@@ -79,19 +61,41 @@ def read_board(filename, group):
             # list of strings
             split_line = lines[i].split(",")
             for j in range(len(split_line)):
-                if int(split_line[j]) > 0:
+                if int(split_line[j]) != 0:
                     # arg1: passes int value of element for color
                     # arg2: passes location in matrix as coordinate multiplied by brick dimensions + 2
-                    group.add(Brick(int(split_line[j])-1, (j * 33 + 1, i * 17 + 1)))
+                    group.add(Brick(int(split_line[j]), (j * 16, (i * 16) + 36)))
+                    print(split_line[j])
 
 
 class Ball(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, vector):
         pygame.sprite.Sprite.__init__(self)
+        self.image = load_png("ball.png")
+        self.rect = self.image.get_rect()
+        self.rect.topleft = ((SIZE[0] / 2) - 8, -(48 - SIZE[1]))
+        # the rect which the ball must stay within at all times
+        self.area = screen.get_rect()
+        self.vector = vector
 
     def update(self):
-        pass
-    pass
+        # returns a rect for this cycle's ball position
+        newpos = calcnewpos(self.rect, self.vector)
+        self.rect = newpos
+        (angle, z) = self.vector
+
+        if not self.area.contains(newpos):
+            # true if top left point of ball rect is not in the screen area
+            tl = not self.area.collidepoint(newpos.topleft)
+
+            # true if top right point of ball rect is not in the screen area
+            tr = not self.area.collidepoint(newpos.topright)
+
+            # true if bottom left point of ball rect is not in the screen area
+            bl = not self.area.collidepoint(newpos.bottomleft)
+
+            # true if bottom right point of ball rect is not in the screen area
+            br = not self.area.collidepoint(newpos.bottomright)
 
 
 class Bar(pygame.sprite.Sprite):
@@ -118,25 +122,26 @@ class Bar(pygame.sprite.Sprite):
 
 
 class Brick(pygame.sprite.Sprite):
-    def __init__(self, color_code, coordinates):
+    def __init__(self, hp, coordinates):
         pygame.sprite.Sprite.__init__(self)
-        self.color_code = color_code
-        self.surface = pygame.Surface(load_png("brick.png").get_size())
-        self.rect = pygame.Rect(coordinates[0], coordinates[1], self.surface.get_width(), self.surface.get_height())
+        self.image = load_png(str(hp) + ".png")
+        self.rect = self.image.get_rect()
+        self.rect.topleft = coordinates
+        self.hp = hp
 
-    def brick_draw(self):
-        self.surface.fill(COLORS[self.color_code])
-        background.blit(self.surface, self.rect)
-        self.surface = load_png("brick.png")
-        background.blit(self.surface, self.rect)
-
-    def update(self):
-        pass
+    def hit(self):
+        if self.hp > 0:
+            self.hp -= 1
+        elif self.hp < 0:
+            self.hp += 1
+        else:
+            print("You should not get here! The hit function should not be called on bricks with 0 HP.")
 
 
 def main():
-
     # initialize screen
+    # screen is global so that the ball can reference its rect to determine acceptable area of movement
+    global screen
     screen = pygame.display.set_mode(SIZE)
     pygame.display.set_caption(NAME)
 
@@ -177,15 +182,13 @@ def main():
     lives = 5
 
     # initialize ball and bar
-    ball = Ball()
+    ball = Ball((0.7, 10))
     bar = Bar()
     brick_group = pygame.sprite.Group()
     read_board("board1.txt", brick_group)
 
-
     # main loop
     while 1:
-
         # defines whether entire screen needs updated
         should_update_entire_screen = False
 
@@ -228,9 +231,9 @@ def main():
                         # fills in the background surface object
                         background.fill(BLACK)
                         background.blit(bar.surface, bar.rect)
+                        background.blit(ball.image, bar.rect)
+                        brick_group.draw(background)
                         screen.blit(background, (0, 0))
-                        for brick in brick_group:
-                            brick.brick_draw()
                         should_update_entire_screen = True
 
 
