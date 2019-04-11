@@ -333,6 +333,11 @@ def main():
 
         if ball.state < 1:
             # next level
+            if not bricksprite:
+                bricksprite.empty()
+                level += 1
+                read_board("board" + str(level) + ".txt")
+                bricksprite = pygame.sprite.RenderPlain(bricks)
 
             screen.blit(background, player.rect, player.rect)
             bricks.draw(background)
