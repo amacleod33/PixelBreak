@@ -8,8 +8,6 @@ from pygame.locals import *
 SIZE = WIDTH, HEIGHT = 512, 640
 LIVES = 1
 
-global block_sprite_path_strings
-block_sprite_path_strings = ["basic_block.png", "med_block.png", "hard_block.png"]
 
 def load_png(name):
     """ Load image and return image object"""
@@ -34,7 +32,7 @@ def calcnewpos(rect, vector):
     (dx, dy) = (z * math.cos(angle), z * math.sin(angle))
     return rect.move(dx, dy)
 
-def read_board(filename, group):
+def read_board(filename):
     """Read plain text and add bricks to a passed group accordingly"""
     with open(os.path.join('boards', filename)) as file:
         lines = file.readlines()
@@ -45,9 +43,8 @@ def read_board(filename, group):
                 if int(split_line[j]) != 0:
                     # arg1: passes int value of element for color
                     # arg2: passes location in matrix as coordinate multiplied by brick dimensions + 2
-                    group.add(Brick(int(split_line[j]), (j * 16, (i * 16) + 36)))
+                    bricks.add(Brick(int(split_line[j]), (j * 16, (i * 16) + 36)))
                     print(split_line[j])
-    return group
 
 class Paddle(pygame.sprite.Sprite):
     """Movable tennis 'bat' with which one hits the ball
@@ -104,7 +101,7 @@ class Ball(pygame.sprite.Sprite):
         self.vector = vector
         self.hit = 0
         self.score = 0
-        self.lives = 5
+        self.lives = LIVES
         self.state = 2
 
     def update(self):
@@ -165,7 +162,7 @@ class Ball(pygame.sprite.Sprite):
                 audio_ball_hit.play()
                 angle = math.pi - angle
 
-            targetbrick = pygame.sprite.spritecollideany(self, bricks)
+            targetbrick = pygame.sprite.spritecollideany(self, bricksprite)
             if targetbrick is not None:
                 audio_brick_hit.play()
                 self.score += 10
@@ -189,7 +186,10 @@ class Ball(pygame.sprite.Sprite):
 
                 if targetbrick.hp == 0:
                     targetbrick.image.fill((0,0,0))
-                    bricks.remove(targetbrick)
+                    bricksprite.remove(targetbrick)
+
+                else:
+                    targetbrick.image = load_png(str(targetbrick.hp) + ".png")
 
         self.vector = (angle, z)
 
@@ -219,7 +219,7 @@ def main():
     global screen
     pygame.init()
     screen = pygame.display.set_mode(SIZE)
-    pygame.display.set_caption('Breakout!')
+    pygame.display.set_caption('PIXEL BREAK')
 
     # Fill background
     global background
@@ -242,7 +242,8 @@ def main():
 
     # Initialize bricks
     global bricks
-    bricks = read_board("board1.txt", pygame.sprite.Group())
+    bricks = pygame.sprite.Group()
+    read_board("board1.txt")
 
     global font
     font = pygame.font.Font(os.path.join('assets', "font.TTF"), 36)
