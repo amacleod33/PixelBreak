@@ -234,6 +234,9 @@ def main():
     global score
     score = 0
 
+    global level
+    level = 1
+
     # Initialize ball
 
     speed = 6
@@ -243,7 +246,7 @@ def main():
     # Initialize bricks
     global bricks
     bricks = pygame.sprite.Group()
-    read_board("board1.txt")
+    read_board("board" + str(level) + ".txt")
 
     global font
     font = pygame.font.Font(os.path.join('assets', "font.TTF"), 36)
@@ -293,17 +296,21 @@ def main():
                     audio_pause.play()
                     if ball.state == 0:
                         ball.state = 1
-                    else:
+                    elif ball.state == 1:
                         ball.state = 0
                 if event.key == pygame.K_RETURN:
                     if ball.state == 2:
 
                         ball.lives = 5
-                        background.fill((0,0,0))
+                        ball.score = 0
+                        background.fill((0, 0, 0))
                         score_surface = font.render(str(ball.score), False, (255, 255, 255))
                         score_pos = score_surface.get_rect(topright=background.get_rect().topright)
                         background.blit(score_surface, score_pos)
                         screen.blit(background, (0, 0))
+
+                        read_board("board" + str(level) + ".txt")
+                        bricksprite = pygame.sprite.RenderPlain(bricks)
 
                         ball.state = 0
 
@@ -322,6 +329,7 @@ def main():
             background.fill((0,0,0))
             background.blit(game_over_surface, game_over_pos)
             screen.blit(background, (0,0))
+
 
         if ball.state < 1:
             # next level
