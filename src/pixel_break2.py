@@ -5,7 +5,6 @@ import os
 import pygame
 from pygame.locals import *
 import struct
-import numpy as np
 
 SIZE = WIDTH, HEIGHT = 512, 640
 LIVES = 1
@@ -51,9 +50,10 @@ def read_board(filename):
 def bricks_to_numbers(group):
     list = [0] * 1024
     for brick in group:
-        position = 0
-        position += (brick.rect.topleft[1] - 36) // 16
-        position += brick.rect.topleft[0] // 16
+        # position = 0
+        # position += ((brick.rect.topleft[1] - 36) // 16) * 32
+        # position += brick.rect.topleft[0] // 16
+        position = (brick.rect.topleft[0]//16) + ((brick.rect.topleft[1] - 36) * 2)
 
         list[position] = int(brick.hp)
 
@@ -345,9 +345,12 @@ def main():
                             if int(num_array[j]) != 0:
                                 # arg1: passes int value of element for color
                                 # arg2: passes location in matrix as coordinate multiplied by brick dimensions
-                                brick_column = j - ((j // 32) * 32)
-                                brick_row = j - (j // 32)
-                                bricksprite.add(Brick(num_array[j], (brick_column * 16, (brick_row * 16) + 36)))
+
+                                # brick_column = j - ((j // 32) * 32)
+                                # brick_row = j - (j // 32)
+                                # bricksprite.add(Brick(num_array[j], (brick_column * 16, (brick_row * 16) + 36)))
+
+                                bricksprite.add(Brick(num_array[j], (16 * (j - ((j // 32) * 32)), ((j // 32) * 16) + 36)))
 
                         background.fill((0, 0, 0))
                         score_surface = font.render(str(ball.score), False, (255, 255, 255))
@@ -466,4 +469,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
