@@ -421,7 +421,7 @@ def main():
         if ball.state == 2:
             if bricks:
                 bricks.empty()
-            game_over_surface = font.render("GAME OVER", False, (255, 255, 255))
+            game_over_surface = load_png('title.png')
             game_over_pos = game_over_surface.get_rect(centerx=background.get_width() / 2)
             background.fill((0,0,0))
             background.blit(game_over_surface, game_over_pos)
