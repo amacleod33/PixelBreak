@@ -46,6 +46,18 @@ def read_board(filename):
                     bricks.add(Brick(int(split_line[j]), (j * 16, (i * 16) + 36)))
                     print(split_line[j])
 
+def bricks_to_numbers(group):
+    list = [0] * 1024
+    for brick in group:
+        position = 0
+        position += (brick.rect.topleft[1] - 37) / 16
+        position += brick.rect.topleft[0] / 16
+
+        list[position] = brick.hp
+
+    return list
+
+
 class Paddle(pygame.sprite.Sprite):
     """Movable tennis 'bat' with which one hits the ball
     Returns: bat object
@@ -287,6 +299,16 @@ def main():
             if event.type == pygame.QUIT:
                 return
             elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_l:
+                    ball.state = 1
+
+                    # load here
+
+                if event.key == pygame.K_s:
+                    ball.state = 1
+
+                    # save here
+
                 if event.key == pygame.K_RIGHT:
                     player.moveright()
                 if event.key == pygame.K_LEFT:
@@ -328,6 +350,7 @@ def main():
             background.fill((0,0,0))
             background.blit(game_over_surface, game_over_pos)
             screen.blit(background, (0,0))
+            level = 1
 
 
         if ball.state < 1:
