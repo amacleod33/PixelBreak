@@ -231,8 +231,7 @@ def main():
     global player
     player = Paddle()
 
-    global score
-    score = 0
+
 
     global level
     level = 1
