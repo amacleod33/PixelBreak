@@ -385,6 +385,12 @@ def main():
                         ba.extend(
                             struct.pack('1033i', *parameter_list))
                         binary_file.write(ba)
+                        if event.key == pygame.K_SPACE:
+                            audio_pause.play()
+                            if ball.state == 0:
+                                ball.state = 1
+                            elif ball.state == 1:
+                                ball.state = 0
 
                 if event.key == pygame.K_RIGHT:
                     player.moveright()
