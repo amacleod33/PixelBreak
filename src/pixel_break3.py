@@ -330,7 +330,8 @@ def main():
                     load = True
 
                 # load here
-                if (event.key == pygame.K_1 or event.key == pygame.K_2 or event.key == pygame.K_3) and load == True:
+                # checks if 1, 2, or 3 is pressed while loading OR on title screen
+                if (event.key == pygame.K_1 or event.key == pygame.K_2 or event.key == pygame.K_3) and (load == True or ball.state == 2):
                     if event.key == pygame.K_1:
                         filename = 'save_state1.dat'
                     elif event.key == pygame.K_2:
@@ -382,35 +383,17 @@ def main():
 
                                 bricksprite.add(
                                     Brick(num_array[j], (16 * (j - ((j // 32) * 32)), ((j // 32) * 16) + 36)))
-                        load = False
 
-                #
-                elif event.key == pygame.K_SPACE:
 
-                    background.fill((0, 0, 0))
-                    screen.blit(background, (0, 0))
-                    screen.blit(background, player.rect, player.rect)
-                    bricks.draw(background)
-                    screen.blit(background, ball.rect, ball.rect)
-                    audio_pause.play()
-                    if ball.state == 0:
-                        ball.state = 1
-                    elif ball.state == 1:
+                        ##########
+
+                        background.fill((0, 0, 0), background.get_rect())
+                        screen.blit(background, (0, 0))
                         ball.state = 0
 
-                    score_surface = font.render(str(ball.score), False, (255, 255, 255))
-                    score_pos = score_surface.get_rect(topright=background.get_rect().topright)
-                    background.blit(score_surface, score_pos)
 
-                    lives_surface = font.render(str(ball.lives), False, (255, 255, 255))
-                    lives_pos = lives_surface.get_rect(topleft=background.get_rect().topleft)
-                    background.blit(lives_surface, lives_pos)
 
-                    screen.blit(background, (0, 0))
-
-                    bricksprite.draw(screen)
-                    playersprites.draw(screen)
-                    ballsprite.draw(screen)
+                        load = False
 
 
                 elif event.key == pygame.K_s:
@@ -486,10 +469,45 @@ def main():
                     #                 ball.state = 0
 
 
+
+                # look at this in a mo
+
+                elif event.key == pygame.K_SPACE:
+
+                    background.fill((0, 0, 0))
+                    screen.blit(background, (0, 0))
+                    screen.blit(background, player.rect, player.rect)
+                    bricks.draw(background)
+                    screen.blit(background, ball.rect, ball.rect)
+                    audio_pause.play()
+                    if ball.state == 0:
+                        ball.state = 1
+                    elif ball.state == 1:
+                        ball.state = 0
+
+                    score_surface = font.render(str(ball.score), False, (255, 255, 255))
+                    score_pos = score_surface.get_rect(topright=background.get_rect().topright)
+                    background.blit(score_surface, score_pos)
+
+                    lives_surface = font.render(str(ball.lives), False, (255, 255, 255))
+                    lives_pos = lives_surface.get_rect(topleft=background.get_rect().topleft)
+                    background.blit(lives_surface, lives_pos)
+
+                    screen.blit(background, (0, 0))
+
+                    bricksprite.draw(screen)
+                    playersprites.draw(screen)
+                    ballsprite.draw(screen)
+
+
+
                 if event.key == pygame.K_RIGHT:
                     player.moveright()
+
                 if event.key == pygame.K_LEFT:
                     player.moveleft()
+
+
 
                 if event.key == pygame.K_RETURN:
                     if ball.state == 2:
@@ -508,7 +526,7 @@ def main():
                         background.blit(score_surface, score_pos)
                         screen.blit(background, (0, 0))
 
-                        read_board("board4.txt")
+                        read_board("board1.txt")
                         bricksprite = pygame.sprite.RenderPlain(bricks)
 
                         ball.state = 0
@@ -531,88 +549,88 @@ def main():
             background.fill((0, 0, 0))
             background.blit(game_over_surface, game_over_pos)
             screen.blit(background, (0, 0))
-            for event in pygame.event.get():
-                ball.state = 1
-                load = True
-                if event.type == pygame.KEYDOWN:
-                    if (event.key == pygame.K_1 or event.key == pygame.K_2 or event.key == pygame.K_3) and load == True:
-                        if event.key == pygame.K_1:
-                            filename = 'save_state1.dat'
-                        elif event.key == pygame.K_2:
-                            filename = 'save_state2.dat'
-                        else:
-                            filename = 'save_state3.dat'
-                        with open(filename, 'rb') as file:
-                            ba = bytearray(file.read())
-                            # chunk_size = struct.calcsize('>5120i')
-
-                            num_array = []
-
-                            # for i in range(len(ba) // chunk_size):
-                            #     data = struct.unpack('1032i', ba)
-                            #     num_array.extend(list(data))
-                            # numpy_array = np.array(str(num_array))
-
-                            data = struct.unpack('1033i', ba)
-                            print("Data: " + str(data))
-                            num_array.extend(list(data))
-                            print("Num array: " + str(num_array))
-
-                            player.rect.topleft = (num_array[-2], num_array[-1])
-                            print(player.rect)
-                            level = num_array[-3]
-                            ball.vector = ((float(num_array[-5] / 100)), num_array[-4])
-
-                            ball.rect.topleft = (num_array[-7], num_array[-6])
-
-                            ball.lives = num_array[-8]
-                            ball.score = num_array[-9]
-
-                            for i in range(1, 10):
-                                num_array.pop(-1)
-
-                            print("Brick array??: " + str(num_array))
-
-                            bricks.empty()
-                            bricksprite.empty()
-
-                            for j in range(len(num_array)):
-                                if int(num_array[j]) != 0:
-                                    # arg1: passes int value of element for color
-                                    # arg2: passes location in matrix as coordinate multiplied by brick dimensions
-
-                                    # brick_column = j - ((j // 32) * 32)
-                                    # brick_row = j - (j // 32)
-                                    # bricksprite.add(Brick(num_array[j], (brick_column * 16, (brick_row * 16) + 36)))
-
-                                    bricksprite.add(
-                                        Brick(num_array[j], (16 * (j - ((j // 32) * 32)), ((j // 32) * 16) + 36)))
-                            background.fill((0, 0, 0))
-                            screen.blit(background, (0, 0))
-                            screen.blit(background, player.rect, player.rect)
-                            bricks.draw(background)
-                            screen.blit(background, ball.rect, ball.rect)
-                            audio_pause.play()
-                            if ball.state == 0:
-                                ball.state = 1
-                            elif ball.state == 1:
-                                ball.state = 0
-                            load = False
-
-
-                    score_surface = font.render(str(ball.score), False, (255, 255, 255))
-                    score_pos = score_surface.get_rect(topright=background.get_rect().topright)
-                    background.blit(score_surface, score_pos)
-
-                    lives_surface = font.render(str(ball.lives), False, (255, 255, 255))
-                    lives_pos = lives_surface.get_rect(topleft=background.get_rect().topleft)
-                    background.blit(lives_surface, lives_pos)
-
-                    screen.blit(background, (0, 0))
-
-                    bricksprite.draw(screen)
-                    playersprites.draw(screen)
-                    ballsprite.draw(screen)
+            # for event in pygame.event.get():
+            #     ball.state = 1
+            #     load = True
+            #     if event.type == pygame.KEYDOWN:
+            #         if (event.key == pygame.K_1 or event.key == pygame.K_2 or event.key == pygame.K_3) and load == True:
+            #             if event.key == pygame.K_1:
+            #                 filename = 'save_state1.dat'
+            #             elif event.key == pygame.K_2:
+            #                 filename = 'save_state2.dat'
+            #             else:
+            #                 filename = 'save_state3.dat'
+            #             with open(filename, 'rb') as file:
+            #                 ba = bytearray(file.read())
+            #                 # chunk_size = struct.calcsize('>5120i')
+            #
+            #                 num_array = []
+            #
+            #                 # for i in range(len(ba) // chunk_size):
+            #                 #     data = struct.unpack('1032i', ba)
+            #                 #     num_array.extend(list(data))
+            #                 # numpy_array = np.array(str(num_array))
+            #
+            #                 data = struct.unpack('1033i', ba)
+            #                 print("Data: " + str(data))
+            #                 num_array.extend(list(data))
+            #                 print("Num array: " + str(num_array))
+            #
+            #                 player.rect.topleft = (num_array[-2], num_array[-1])
+            #                 print(player.rect)
+            #                 level = num_array[-3]
+            #                 ball.vector = ((float(num_array[-5] / 100)), num_array[-4])
+            #
+            #                 ball.rect.topleft = (num_array[-7], num_array[-6])
+            #
+            #                 ball.lives = num_array[-8]
+            #                 ball.score = num_array[-9]
+            #
+            #                 for i in range(1, 10):
+            #                     num_array.pop(-1)
+            #
+            #                 print("Brick array??: " + str(num_array))
+            #
+            #                 bricks.empty()
+            #                 bricksprite.empty()
+            #
+            #                 for j in range(len(num_array)):
+            #                     if int(num_array[j]) != 0:
+            #                         # arg1: passes int value of element for color
+            #                         # arg2: passes location in matrix as coordinate multiplied by brick dimensions
+            #
+            #                         # brick_column = j - ((j // 32) * 32)
+            #                         # brick_row = j - (j // 32)
+            #                         # bricksprite.add(Brick(num_array[j], (brick_column * 16, (brick_row * 16) + 36)))
+            #
+            #                         bricksprite.add(
+            #                             Brick(num_array[j], (16 * (j - ((j // 32) * 32)), ((j // 32) * 16) + 36)))
+            #                 background.fill((0, 0, 0))
+            #                 screen.blit(background, (0, 0))
+            #                 screen.blit(background, player.rect, player.rect)
+            #                 bricks.draw(background)
+            #                 screen.blit(background, ball.rect, ball.rect)
+            #                 audio_pause.play()
+            #                 if ball.state == 0:
+            #                     ball.state = 1
+            #                 elif ball.state == 1:
+            #                     ball.state = 0
+            #                 load = False
+            #
+            #
+            #         score_surface = font.render(str(ball.score), False, (255, 255, 255))
+            #         score_pos = score_surface.get_rect(topright=background.get_rect().topright)
+            #         background.blit(score_surface, score_pos)
+            #
+            #         lives_surface = font.render(str(ball.lives), False, (255, 255, 255))
+            #         lives_pos = lives_surface.get_rect(topleft=background.get_rect().topleft)
+            #         background.blit(lives_surface, lives_pos)
+            #
+            #         screen.blit(background, (0, 0))
+            #
+            #         bricksprite.draw(screen)
+            #         playersprites.draw(screen)
+            #         ballsprite.draw(screen)
             level = 1
 
         if ball.state < 1:
