@@ -371,6 +371,7 @@ def main():
                         print(num_array)
 
                 if event.key == pygame.K_s:
+
                     audio_pause.play()
 
                     ball.state = 1
