@@ -388,11 +388,11 @@ def main():
 
                 if event.key == pygame.K_s:
                     audio_pause.play()
-                    pause_screen = load_png('save.png')
-                    pause_pos = pause_screen.get_rect(centerx=background.get_width() / 2)
-                    background.fill((0, 0, 0))
-                    background.blit(pause_screen, pause_pos)
-                    screen.blit(background, (0,0))
+                    # pause_screen = load_png('save.png')
+                    # pause_pos = pause_screen.get_rect(centerx=background.get_width() / 2)
+                    # background.fill((0, 0, 0))
+                    # background.blit(pause_screen, pause_pos)
+                    # screen.blit(background, (0,0))
                     ball.state = 1
 
                     if event.key == pygame.K_1 or event.key == pygame.K_2 or event.key == pygame.K_3:
@@ -407,8 +407,8 @@ def main():
                             ba = bytearray()
                             parameter_list = bricks_to_numbers(bricksprite)
                             parameter_list.extend((ball.score, ball.lives, ball.rect.topleft[0], ball.rect.topleft[1],
-                                                   int(ball.vector[0] * 100), ball.vector[1], level, player.rect.topleft[0],
-                                                   player.rect.topleft[1]))
+                                                   int(ball.vector[0] * 100), ball.vector[1], level,
+                                                   player.rect.topleft[0], player.rect.topleft[1]))
                             print(parameter_list)
                             ba.extend(
                                 struct.pack('1033i', *parameter_list))
