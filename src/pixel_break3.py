@@ -25,7 +25,6 @@ def load_png(name):
 
 
 def get_sound_path(name):
-    """ Load image and return image object"""
     fullname = os.path.join('audio', name)
     return fullname
 
@@ -245,8 +244,6 @@ def main():
     # Initialize screen
     global screen
     pygame.init()
-    global oh_yeah
-    oh_yeah = pygame.mixer.Sound(get_sound_path("oh_yeah.wav"))
     screen = pygame.display.set_mode(SIZE)
     pygame.display.set_caption('PIXEL BREAK')
 
@@ -277,7 +274,7 @@ def main():
     # Initialize bricks
     global bricks
     bricks = pygame.sprite.Group()
-    read_board("board4.txt")
+    read_board("board1.txt")
 
     global font
     font = pygame.font.Font(os.path.join('assets', "font.TTF"), 36)
@@ -306,6 +303,15 @@ def main():
     audio_pause = pygame.mixer.Sound(get_sound_path("sfx_sounds_Blip2.wav"))
     global audio_next_level
     audio_next_level = pygame.mixer.Sound(get_sound_path("sfx_damage_hit10.wav"))
+    global oh_yeah
+    oh_yeah = pygame.mixer.Sound(get_sound_path("oh_yeah.wav"))
+
+
+    # create mode parameters
+    editing = False
+    brick_active = False
+    active_brick = 0
+    create_bricks = []
 
     # Event loop
 
@@ -317,6 +323,52 @@ def main():
             if event.type == pygame.QUIT:
                 return
             elif event.type == pygame.KEYDOWN:
+
+                if ball.state == 3 and editing == False:
+                    if event.key == pygame.K_1 or event.key == pygame.K_2 or event.key == pygame.K_3 or event.key == pygame.K_4 or event.key == pygame.K_5:
+                        editing = True
+
+                        bricks.empty()
+                        bricksprite.empty()
+
+                        if event.key == pygame.K_1:
+                            # sets bricks group to user file
+                            read_board("user1.txt")
+
+                        elif event.key == pygame.K_2:
+                            # sets bricks group to user file
+                            read_board("user2.txt")
+
+                        elif event.key == pygame.K_3:
+                            # sets bricks group to user file
+                            read_board("user3.txt")
+
+                        elif event.key == pygame.K_4:
+                            # sets bricks group to user file
+                            read_board("user4.txt")
+
+                        elif event.key == pygame.K_5:
+                            # sets bricks group to user file
+                            read_board("user5.txt")
+
+                        background.fill((0, 0, 0))
+                        screen.blit(background, (0, 0))
+                        bricksprite = bricks
+                        bricksprite.update()
+
+                if editing and not brick_active:
+                    pass
+
+
+
+
+
+                if event.key == pygame.K_c and ball.state == 2:
+                    background.blit(load_png("create.png"), (0, 0))
+                    screen.blit(background, (0, 0))
+
+                    ball.state = 3
+
                 if event.key == pygame.K_l:
                     audio_pause.play()
                     load_screen = load_png('load_screen.png')
@@ -376,10 +428,6 @@ def main():
                             if int(num_array[j]) != 0:
                                 # arg1: passes int value of element for color
                                 # arg2: passes location in matrix as coordinate multiplied by brick dimensions
-
-                                # brick_column = j - ((j // 32) * 32)
-                                # brick_row = j - (j // 32)
-                                # bricksprite.add(Brick(num_array[j], (brick_column * 16, (brick_row * 16) + 36)))
 
                                 bricksprite.add(
                                     Brick(num_array[j], (16 * (j - ((j // 32) * 32)), ((j // 32) * 16) + 36)))
