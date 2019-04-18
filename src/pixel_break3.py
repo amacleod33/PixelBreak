@@ -140,8 +140,6 @@ class Ball(pygame.sprite.Sprite):
                 self.lives -= 1
                 if self.lives < 1:
                     self.state = 2
-                elif self.lives == 0:
-                    main()
                 else:
                     self.rect.x = 320
                     self.rect.y = 420
