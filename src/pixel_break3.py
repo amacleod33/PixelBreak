@@ -334,42 +334,74 @@ def main():
             elif event.type == pygame.KEYDOWN:
 
                 if ball.state == 3 and editing == False:
+
+                    bricks.empty()
+                    bricksprite.empty()
+
+
                     if event.key == pygame.K_1 or event.key == pygame.K_2 or event.key == pygame.K_3 or event.key == pygame.K_4 or event.key == pygame.K_5:
                         editing = True
 
-                        bricks.empty()
-                        bricksprite.empty()
-
+                        local_draw = False
                         if event.key == pygame.K_1:
                             # sets bricks group to user file
                             create_bricks = read_board("user1.txt")
                             user_file = "user1.txt"
+                            local_draw = True
 
                         elif event.key == pygame.K_2:
                             # sets bricks group to user file
                             create_bricks = read_board("user2.txt")
                             user_file = "user2.txt"
+                            local_draw = True
 
                         elif event.key == pygame.K_3:
                             # sets bricks group to user file
                             create_bricks = read_board("user3.txt")
                             user_file = "user3.txt"
+                            local_draw = True
 
                         elif event.key == pygame.K_4:
                             # sets bricks group to user file
                             create_bricks = read_board("user4.txt")
                             user_file = "user4.txt"
+                            local_draw = True
 
                         elif event.key == pygame.K_5:
                             # sets bricks group to user file
                             create_bricks = read_board("user5.txt")
                             user_file = "user5.txt"
+                            local_draw = True
 
                         background.fill((0, 0, 0))
                         bricksprite = pygame.sprite.RenderPlain(bricks)
                         bricksprite.draw(background)
                         background.blit(select.image, select_coordinates)
                         screen.blit(background, (0, 0))
+
+                    if event.key == pygame.K_F1 or event.key == pygame.K_F2 or event.key == pygame.K_F3 or event.key == pygame.K_F4 or event.key == pygame.K_F5:
+
+                        if event.key == pygame.K_F1:
+                            read_board("user1.txt")
+
+                        elif event.key == pygame.K_F2:
+                            read_board("user2.txt")
+
+                        elif event.key == pygame.K_F3:
+                            read_board("user3.txt")
+
+                        elif event.key == pygame.K_F4:
+                            read_board("user4.txt")
+
+                        elif event.key == pygame.K_F5:
+                            read_board("user5.txt")
+
+                        background.fill((0, 0, 0))
+                        screen.blit(background, (0, 0))
+                        bricksprite = pygame.sprite.RenderPlain(bricks)
+                        level = 0
+                        ball.state = 0
+
 
                 elif editing and not brick_active:
                     if event.key == pygame.K_UP and select_coordinates[1] >= 52:
@@ -471,13 +503,6 @@ def main():
                         background.fill((0, 0, 0))
                         bricksprite.draw(background)
                         screen.blit(background, (0, 0))
-
-
-
-
-
-
-
 
                 elif event.key == pygame.K_c and ball.state == 2:
                     background.blit(load_png("create.png"), (0, 0))
@@ -809,7 +834,7 @@ def main():
                 read_board("board" + str(level) + ".txt")
                 bricksprite = pygame.sprite.RenderPlain(bricks)
                 ball.speed += 10
-                oh_yeah.play()
+
             screen.blit(background, player.rect, player.rect)
             bricks.draw(background)
             screen.blit(background, ball.rect, ball.rect)
