@@ -320,6 +320,7 @@ def main():
     brick_active = False
     active_brick = 0
     create_bricks = []
+    user_file = ""
 
     # Event loop
 
@@ -342,22 +343,27 @@ def main():
                         if event.key == pygame.K_1:
                             # sets bricks group to user file
                             create_bricks = read_board("user1.txt")
+                            user_file = "user1.txt"
 
                         elif event.key == pygame.K_2:
                             # sets bricks group to user file
                             create_bricks = read_board("user2.txt")
+                            user_file = "user2.txt"
 
                         elif event.key == pygame.K_3:
                             # sets bricks group to user file
                             create_bricks = read_board("user3.txt")
+                            user_file = "user3.txt"
 
                         elif event.key == pygame.K_4:
                             # sets bricks group to user file
                             create_bricks = read_board("user4.txt")
+                            user_file = "user4.txt"
 
                         elif event.key == pygame.K_5:
                             # sets bricks group to user file
                             create_bricks = read_board("user5.txt")
+                            user_file = "user5.txt"
 
                         background.fill((0, 0, 0))
                         bricksprite = pygame.sprite.RenderPlain(bricks)
@@ -405,10 +411,65 @@ def main():
                         bricksprite.draw(background)
                         screen.blit(background, (0, 0))
 
+                    elif event.key == pygame.K_s:
+                        string = ""
+                        for i in range(1024):
+                            if i == 0:
+                                string += str(create_bricks[i]) + ","
+                            elif ((i + 1) % 32) == 0:
+                                string += str(create_bricks[i]) + "\n"
+                            else:
+                                string += str(create_bricks[i]) + ","
+                        with open(os.path.join('boards', user_file), "w") as file:
+                            file.write(string)
+
+
                 elif editing and brick_active:
                     if event.key == pygame.K_RETURN:
                         brick_active = False
                         background.blit(select.image, select_coordinates)
+                        screen.blit(background, (0, 0))
+
+                    elif event.key == pygame.K_UP:
+                        position = (select_coordinates[0] // 16) + ((select_coordinates[1] - 36) * 2)
+                        if create_bricks[position] < 9:
+                            create_bricks[position] += 1
+                        else:
+                            create_bricks[position] = -5
+                        bricks.empty()
+                        bricksprite.empty()
+
+                        for j in range(1024):
+                            if create_bricks[j] != 0:
+                                # arg1: passes int value of element for color
+                                # arg2: passes location in matrix as coordinate multiplied by brick dimensions
+
+                                bricksprite.add(
+                                    Brick(create_bricks[j], (16 * (j - ((j // 32) * 32)), ((j // 32) * 16) + 36)))
+
+                        background.fill((0, 0, 0))
+                        bricksprite.draw(background)
+                        screen.blit(background, (0, 0))
+
+                    elif event.key == pygame.K_DOWN:
+                        position = (select_coordinates[0] // 16) + ((select_coordinates[1] - 36) * 2)
+                        if create_bricks[position] > -5:
+                            create_bricks[position] -= 1
+                        else:
+                            create_bricks[position] = 9
+                        bricks.empty()
+                        bricksprite.empty()
+
+                        for j in range(1024):
+                            if create_bricks[j] != 0:
+                                # arg1: passes int value of element for color
+                                # arg2: passes location in matrix as coordinate multiplied by brick dimensions
+
+                                bricksprite.add(
+                                    Brick(create_bricks[j], (16 * (j - ((j // 32) * 32)), ((j // 32) * 16) + 36)))
+
+                        background.fill((0, 0, 0))
+                        bricksprite.draw(background)
                         screen.blit(background, (0, 0))
 
 
@@ -416,13 +477,15 @@ def main():
 
 
 
-                if event.key == pygame.K_c and ball.state == 2:
+
+
+                elif event.key == pygame.K_c and ball.state == 2:
                     background.blit(load_png("create.png"), (0, 0))
                     screen.blit(background, (0, 0))
 
                     ball.state = 3
 
-                if event.key == pygame.K_l:
+                elif event.key == pygame.K_l:
                     audio_pause.play()
                     load_screen = load_png('load_screen.png')
                     load_pos = load_screen.get_rect(centerx=background.get_width() / 2)
@@ -436,7 +499,7 @@ def main():
 
                 # load here
                 # checks if 1, 2, or 3 is pressed while loading OR on title screen
-                if (event.key == pygame.K_1 or event.key == pygame.K_2 or event.key == pygame.K_3) and (load == True or ball.state == 2):
+                elif (event.key == pygame.K_1 or event.key == pygame.K_2 or event.key == pygame.K_3) and (load == True or ball.state == 2):
                     if event.key == pygame.K_1:
                         filename = 'save_state1.dat'
                     elif event.key == pygame.K_2:
@@ -602,15 +665,15 @@ def main():
 
 
 
-                if event.key == pygame.K_RIGHT:
+                elif event.key == pygame.K_RIGHT:
                     player.moveright()
 
-                if event.key == pygame.K_LEFT:
+                elif event.key == pygame.K_LEFT:
                     player.moveleft()
 
 
 
-                if event.key == pygame.K_RETURN:
+                elif event.key == pygame.K_RETURN:
                     if ball.state == 2:
                         ball.lives = 5
                         ball.score = 0
@@ -635,6 +698,8 @@ def main():
                 if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
                     return
 
+
+            # what? did I write this? this is stupid
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_RIGHT or event.key == pygame.K_LEFT:
                     player.still()
