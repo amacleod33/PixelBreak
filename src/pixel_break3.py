@@ -7,7 +7,7 @@ from pygame.locals import *
 import struct
 
 SIZE = WIDTH, HEIGHT = 512, 640
-LIVES = 1
+LIVES = 5
 
 
 def load_png(name):
@@ -379,7 +379,7 @@ def main():
                         background.blit(select.image, select_coordinates)
                         screen.blit(background, (0, 0))
 
-                    if event.key == pygame.K_F1 or event.key == pygame.K_F2 or event.key == pygame.K_F3 or event.key == pygame.K_F4 or event.key == pygame.K_F5:
+                    elif event.key == pygame.K_F1 or event.key == pygame.K_F2 or event.key == pygame.K_F3 or event.key == pygame.K_F4 or event.key == pygame.K_F5:
 
                         if event.key == pygame.K_F1:
                             read_board("user1.txt")
@@ -401,6 +401,11 @@ def main():
                         bricksprite = pygame.sprite.RenderPlain(bricks)
                         level = 0
                         ball.state = 0
+
+                    elif event.key == pygame.K_RETURN:
+                        background.fill((0, 0, 0))
+                        screen.blit(background, (0, 0))
+                        ball.state = 2
 
 
                 elif editing and not brick_active:
