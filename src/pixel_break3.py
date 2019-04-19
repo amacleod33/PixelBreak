@@ -38,16 +38,19 @@ def calcnewpos(rect, vector):
 def read_board(filename):
     """Read plain text and add bricks to a passed group accordingly"""
     with open(os.path.join('boards', filename)) as file:
+        output_list = []
         lines = file.readlines()
         for i in range(len(lines)):
             # list of strings
             split_line = lines[i].split(",")
             for j in range(len(split_line)):
+                output_list.append(int(split_line[j]))
                 if int(split_line[j]) != 0:
                     # arg1: passes int value of element for color
                     # arg2: passes location in matrix as coordinate multiplied by brick dimensions + 2
                     bricks.add(Brick(int(split_line[j]), (j * 16, (i * 16) + 36)))
                     print(split_line[j])
+        return output_list
 
 
 def bricks_to_numbers(group):
@@ -282,6 +285,13 @@ def main():
     bricksprite = pygame.sprite.RenderPlain(bricks)
     ballsprite = pygame.sprite.RenderPlain(ball)
 
+
+    # initialize selector
+    select = pygame.sprite.Sprite()
+    select.image = load_png("select.png")
+    select.rect = select.image.get_rect()
+    select_coordinates = (0, 36)
+
     # Blit everything to the screen
     screen.blit(background, (0, 0))
     pygame.display.flip()
@@ -331,31 +341,76 @@ def main():
 
                         if event.key == pygame.K_1:
                             # sets bricks group to user file
-                            read_board("user1.txt")
+                            create_bricks = read_board("user1.txt")
 
                         elif event.key == pygame.K_2:
                             # sets bricks group to user file
-                            read_board("user2.txt")
+                            create_bricks = read_board("user2.txt")
 
                         elif event.key == pygame.K_3:
                             # sets bricks group to user file
-                            read_board("user3.txt")
+                            create_bricks = read_board("user3.txt")
 
                         elif event.key == pygame.K_4:
                             # sets bricks group to user file
-                            read_board("user4.txt")
+                            create_bricks = read_board("user4.txt")
 
                         elif event.key == pygame.K_5:
                             # sets bricks group to user file
-                            read_board("user5.txt")
+                            create_bricks = read_board("user5.txt")
 
                         background.fill((0, 0, 0))
+                        bricksprite = pygame.sprite.RenderPlain(bricks)
+                        bricksprite.draw(background)
+                        background.blit(select.image, select_coordinates)
                         screen.blit(background, (0, 0))
-                        bricksprite = bricks
-                        bricksprite.update()
 
-                if editing and not brick_active:
-                    pass
+                elif editing and not brick_active:
+                    if event.key == pygame.K_UP and select_coordinates[1] >= 52:
+                        previous = pygame.Rect(select_coordinates[0], select_coordinates[1], 16, 16)
+                        background.fill((0, 0, 0), previous)
+                        bricksprite.draw(background)
+                        select_coordinates = (select_coordinates[0], select_coordinates[1] - 16)
+                        background.blit(select.image, select_coordinates)
+                        screen.blit(background, (0, 0))
+
+                    elif event.key == pygame.K_DOWN and select_coordinates[1] <= 531:
+                        previous = pygame.Rect(select_coordinates[0], select_coordinates[1], 16, 16)
+                        background.fill((0, 0, 0), previous)
+                        bricksprite.draw(background)
+                        select_coordinates = (select_coordinates[0], select_coordinates[1] + 16)
+                        background.blit(select.image, select_coordinates)
+                        screen.blit(background, (0, 0))
+
+                    elif event.key == pygame.K_LEFT and select_coordinates[0] >= 16:
+                        previous = pygame.Rect(select_coordinates[0], select_coordinates[1], 16, 16)
+                        background.fill((0, 0, 0), previous)
+                        bricksprite.draw(background)
+                        select_coordinates = (select_coordinates[0] - 16, select_coordinates[1])
+                        background.blit(select.image, select_coordinates)
+                        screen.blit(background, (0, 0))
+
+                    elif event.key == pygame.K_RIGHT and select_coordinates[0] <= 495:
+                        previous = pygame.Rect(select_coordinates[0], select_coordinates[1], 16, 16)
+                        background.fill((0, 0, 0), previous)
+                        bricksprite.draw(background)
+                        select_coordinates = (select_coordinates[0] + 16, select_coordinates[1])
+                        background.blit(select.image, select_coordinates)
+                        screen.blit(background, (0, 0))
+
+                    elif event.key == pygame.K_RETURN:
+                        brick_active = True
+                        previous = pygame.Rect(select_coordinates[0], select_coordinates[1], 16, 16)
+                        background.fill((0, 0, 0), previous)
+                        bricksprite.draw(background)
+                        screen.blit(background, (0, 0))
+
+                elif editing and brick_active:
+                    if event.key == pygame.K_RETURN:
+                        brick_active = False
+                        background.blit(select.image, select_coordinates)
+                        screen.blit(background, (0, 0))
+
 
 
 
@@ -708,7 +763,6 @@ def main():
 
             screen.blit(background, (0, 0))
 
-            bricksprite.update()
             playersprites.update()
             ballsprite.update()
 
