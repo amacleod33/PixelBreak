@@ -10,9 +10,9 @@ SIZE = WIDTH, HEIGHT = 512, 640
 LIVES = 5
 
 STARTING_ANGLE = (3 * math.pi) / 4
-STARTING_SPEED = 5
+STARTING_SPEED = 6
 
-PADDLE_SPEED = 7
+PADDLE_SPEED = 8
 
 
 def load_png(name):
@@ -155,7 +155,8 @@ class Ball(pygame.sprite.Sprite):
                 else:
                     self.rect.x = 320
                     self.rect.y = 420
-                    self.vector = ((3 * math.pi) / 4, 0)
+                    angle = STARTING_ANGLE
+                    z = STARTING_SPEED
                     player.reinit()
 
             # hits left side of screen
@@ -412,6 +413,9 @@ class Ball(pygame.sprite.Sprite):
 
                 else:
                     targetbrick.image = load_png(str(targetbrick.hp) + ".png")
+
+            else:
+                self.previous_brick = None
 
         print(angle)
         print(self.previous_brick)
