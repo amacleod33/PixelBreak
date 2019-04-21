@@ -517,10 +517,9 @@ def main():
 
                 elif event.key == pygame.K_l:
                     audio_pause.play()
-                    load_screen = load_png('load_screen.png')
-                    load_pos = load_screen.get_rect(centerx=background.get_width() / 2)
+                    load_screen = load_png('load.png')
                     background.fill((0, 0, 0))
-                    background.blit(load_screen, load_pos)
+                    background.blit(load_screen, (0, 0))
                     screen.blit(background, (0, 0))
                     audio_pause.play()
 
@@ -593,9 +592,8 @@ def main():
                 elif event.key == pygame.K_s:
                     audio_pause.play()
                     pause_screen = load_png('save.png')
-                    pause_pos = pause_screen.get_rect(centerx=background.get_width() / 2)
                     background.fill((0, 0, 0))
-                    background.blit(pause_screen, pause_pos)
+                    background.blit(pause_screen, (0, 0))
                     screen.blit(background, (0,0))
                     ball.state = 1
                     save = True
