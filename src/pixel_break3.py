@@ -113,7 +113,7 @@ class Ball(pygame.sprite.Sprite):
     Functions: update, calcnewpos
     Attributes: area, vector"""
 
-    def __init__(self, vector):
+    def __init__(self, angle):
         pygame.sprite.Sprite.__init__(self)
         self.image = load_png('ball.png')
         self.rect = self.image.get_rect()
@@ -121,11 +121,13 @@ class Ball(pygame.sprite.Sprite):
         self.rect.center = (320, 420)
         self.area = screen.get_rect()
         self.speed = 6
-        self.vector = (vector, self.speed)
+        self.vector = (angle, self.speed)
         self.hit = 0
         self.score = 0
         self.lives = LIVES
         self.state = 2
+
+        self.is_in_object = False
 
 
     def update(self):
@@ -145,12 +147,38 @@ class Ball(pygame.sprite.Sprite):
                 else:
                     self.rect.x = 320
                     self.rect.y = 420
-                    self.vector = (.7, 0)
+                    self.vector = ((3 * math.pi) / 4, 0)
                     player.reinit()
 
-            elif (tl and bl) or (tr and br):
-                angle = math.pi - angle
+            # hits left side of screen
+            elif (tl and bl):
+
+                if not ((math.pi / 2) <= angle <= (3 * math.pi) / 2):
+                    print("out of range!")
+
+                elif angle < math.pi:
+                    angle = math.pi - angle
+
+                else:
+                    angle = (2 * math.pi) - (angle - math.pi)
+
+            # hits right side of screen
+            elif (tr and br):
+
+                if not ((0 <= angle <= math.pi / 2) or (((3 * math.pi) / 2) <= angle < (2 * math.pi))):
+                    print("out of range!")
+
+                elif angle < (math.pi / 2):
+                    angle = math.pi - angle
+
+                else:
+                    angle = (2 * math.pi) - (angle - math.pi)
+
+
+
+            # hits top of screen
             elif tr and tl:
+
                 angle = -angle
 
         else:
@@ -161,12 +189,17 @@ class Ball(pygame.sprite.Sprite):
             # iteration. this is to stop odd ball behaviour where it finds a collision *inside* the
             # bat, the ball reverses, and is still inside the bat, so bounces around inside.
             # This way, the ball can always escape and bounce away cleanly
-            tl = player.rect.collidepoint(newpos.topleft)
-            tr = player.rect.collidepoint(newpos.topright)
+
+
+            # tl = player.rect.collidepoint(newpos.topleft)
+            # tr = player.rect.collidepoint(newpos.topright)
+
+
+
             bl = player.rect.collidepoint(newpos.bottomleft)
             br = player.rect.collidepoint(newpos.bottomright)
 
-            if (br and bl):
+            if (br or bl) and not self.is_in_object:
                 # if not self.hit:
                 #     audio_ball_hit.play()
                 #     angle = -angle
@@ -174,17 +207,26 @@ class Ball(pygame.sprite.Sprite):
                 #     self.hit = not self.hit
 
                 audio_ball_hit.play()
-                angle = -angle
+                angle = (2 * math.pi) - angle
 
-            elif tl or bl or tr or br:
-                # if not self.hit:
-                #     audio_ball_hit.play()
-                #     angle = math.pi - angle
-                # else:
-                #     self.hit = not self.hit
+                nextpos = calcnewpos(self.rect, (angle, z))
+                if nextpos.colliderect(player.rect):
+                    self.is_in_object = True
 
-                audio_ball_hit.play()
-                angle = math.pi - angle
+            elif (br or bl) and self.is_in_object:
+                if not (bl or br):
+                    self.is_in_object = False
+
+            #
+            # elif tl or bl or tr or br:
+            #     # if not self.hit:
+            #     #     audio_ball_hit.play()
+            #     #     angle = math.pi - angle
+            #     # else:
+            #     #     self.hit = not self.hit
+            #
+            #     audio_ball_hit.play()
+            #     angle = math.pi - angle
 
             targetbrick = pygame.sprite.spritecollideany(self, bricksprite)
             if targetbrick is not None:
@@ -217,6 +259,7 @@ class Ball(pygame.sprite.Sprite):
                 else:
                     targetbrick.image = load_png(str(targetbrick.hp) + ".png")
 
+        print(angle)
         self.vector = (angle, z)
 
 
@@ -269,7 +312,7 @@ def main():
     speed = 6
     rand = 0.1 * random.randint(5, 8)
 
-    ball = Ball((.7))
+    ball = Ball((5 * math.pi) / 6)
 
 
     # Initialize bricks
@@ -311,8 +354,9 @@ def main():
     audio_pause = pygame.mixer.Sound(get_sound_path("sfx_sounds_Blip2.wav"))
     global audio_next_level
     audio_next_level = pygame.mixer.Sound(get_sound_path("sfx_damage_hit10.wav"))
-    global oh_yeah
-    oh_yeah = pygame.mixer.Sound(get_sound_path("oh_yeah.wav"))
+
+    # global oh_yeah
+    # oh_yeah = pygame.mixer.Sound(get_sound_path("oh_yeah.wav"))
 
 
     # create mode parameters
