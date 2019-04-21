@@ -637,7 +637,7 @@ def main():
                         background.blit(select.image, select_coordinates)
                         screen.blit(background, (0, 0))
 
-                    elif event.key == pygame.K_RETURN:
+                    elif event.key == pygame.K_SPACE:
                         brick_active = True
                         previous = pygame.Rect(select_coordinates[0], select_coordinates[1], 16, 16)
                         background.fill((0, 0, 0), previous)
@@ -656,9 +656,14 @@ def main():
                         with open(os.path.join('boards', user_file), "w") as file:
                             file.write(string)
 
+                    elif event.key == pygame.K_RETURN:
+                        editing = False
+                        background.fill((0, 0, 0))
+                        screen.blit(background, (0, 0))
+                        ball.state = 2
 
                 elif editing and brick_active:
-                    if event.key == pygame.K_RETURN:
+                    if event.key == pygame.K_SPACE:
                         brick_active = False
                         background.blit(select.image, select_coordinates)
                         screen.blit(background, (0, 0))
@@ -1035,7 +1040,10 @@ def main():
                 level += 1
                 read_board("board" + str(level) + ".txt")
                 bricksprite = pygame.sprite.RenderPlain(bricks)
-                ball.speed += 10
+
+
+                # speeds up after level
+                # ball.speed += 10
 
             screen.blit(background, player.rect, player.rect)
             bricks.draw(background)
