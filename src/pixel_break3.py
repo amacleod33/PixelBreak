@@ -175,11 +175,12 @@ class Ball(pygame.sprite.Sprite):
                     angle = (2 * math.pi) - (angle - math.pi)
 
 
-
             # hits top of screen
             elif tr and tl:
-
-                angle = -angle
+                if angle < ((3 * math.pi) / 2):
+                    angle = math.pi - (angle - math.pi)
+                else:
+                    angle = (2 * math.pi) - angle
 
         else:
             # Deflate the rectangles so you can't catch a ball behind the bat
