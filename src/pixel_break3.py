@@ -9,6 +9,9 @@ import struct
 SIZE = WIDTH, HEIGHT = 512, 640
 LIVES = 5
 
+STARTING_ANGLE = (3 * math.pi) / 4
+STARTING_SPEED = 7
+
 
 def load_png(name):
     """ Load image and return image object"""
@@ -120,7 +123,7 @@ class Ball(pygame.sprite.Sprite):
         screen = pygame.display.get_surface()
         self.rect.center = (320, 420)
         self.area = screen.get_rect()
-        self.speed = 6
+        self.speed = STARTING_SPEED
         self.vector = (angle, self.speed)
         self.hit = 0
         self.score = 0
@@ -131,7 +134,12 @@ class Ball(pygame.sprite.Sprite):
 
 
     def update(self):
-        newpos = calcnewpos(self.rect, self.vector)
+
+        if self.is_in_object:
+            newpos = self.nextpos
+        else:
+            newpos = calcnewpos(self.rect, self.vector)
+
         self.rect = newpos
         (angle, z) = self.vector
 
@@ -200,6 +208,9 @@ class Ball(pygame.sprite.Sprite):
             bl = player.rect.collidepoint(newpos.bottomleft)
             br = player.rect.collidepoint(newpos.bottomright)
 
+            # this is for the brick calculations
+            targetbrick = pygame.sprite.spritecollideany(self, bricksprite)
+
             if (br or bl) and not self.is_in_object:
                 # if not self.hit:
                 #     audio_ball_hit.play()
@@ -210,13 +221,13 @@ class Ball(pygame.sprite.Sprite):
                 audio_ball_hit.play()
                 angle = (2 * math.pi) - angle
 
-                nextpos = calcnewpos(self.rect, (angle, z))
-                if nextpos.colliderect(player.rect):
+                self.nextpos = calcnewpos(self.rect, (angle, z))
+                if self.nextpos.colliderect(player.rect):
                     self.is_in_object = True
 
-            elif (br or bl) and self.is_in_object:
-                if not (bl or br):
-                    self.is_in_object = False
+            # elif (br or bl) and self.is_in_object:
+            #     if not (bl or br):
+            #         self.is_in_object = False
 
             #
             # elif tl or bl or tr or br:
@@ -229,22 +240,145 @@ class Ball(pygame.sprite.Sprite):
             #     audio_ball_hit.play()
             #     angle = math.pi - angle
 
-            targetbrick = pygame.sprite.spritecollideany(self, bricksprite)
-            if targetbrick is not None:
+            elif targetbrick is not None:
                 audio_brick_hit.play()
                 self.score += 10
-                if self.score % 100 == 0 and self.score > 0:
-                    self.vector = (.7, self.speed + 2)
+
+                # I think Alex added this, reassess after fixing other issues
+                # if self.score % 100 == 0 and self.score > 0:
+                #     self.vector = (.7, self.speed + 2)
 
                 tl = targetbrick.rect.collidepoint(newpos.topleft)
                 tr = targetbrick.rect.collidepoint(newpos.topright)
                 bl = targetbrick.rect.collidepoint(newpos.bottomleft)
                 br = targetbrick.rect.collidepoint(newpos.bottomright)
 
-                if (tr and tl) or (br and bl):
-                    angle = -angle
-                elif tl or bl or tr or br:
-                    angle = math.pi - angle
+
+                # # hits bottom
+                # if (tr and tl) and not self.is_in_object:
+                #     if angle < ((3 * math.pi) / 2):
+                #         angle = math.pi - (angle - math.pi)
+                #     else:
+                #         angle = (2 * math.pi) - angle
+                #
+                #     self.nextpos = calcnewpos(self.rect, (angle, z))
+                #     if self.nextpos.colliderect(player.rect):
+                #         self.is_in_object = True
+                #
+                #
+                # # hits top
+                # elif (br and bl) and not self.is_in_object:
+                #     angle = (2 * math.pi) - angle
+                #
+                #     self.nextpos = calcnewpos(self.rect, (angle, z))
+                #     if self.nextpos.colliderect(player.rect):
+                #         self.is_in_object = True
+                #
+                # # hits right
+                # elif (tl and bl) and not self.is_in_object:
+                #
+                #     if not ((math.pi / 2) <= angle <= (3 * math.pi) / 2):
+                #         print("out of range!")
+                #
+                #     elif angle < math.pi:
+                #         angle = math.pi - angle
+                #
+                #     else:
+                #         angle = (2 * math.pi) - (angle - math.pi)
+                #
+                #     self.nextpos = calcnewpos(self.rect, (angle, z))
+                #     if self.nextpos.colliderect(player.rect):
+                #         self.is_in_object = True
+                #
+                # # hits left
+                # elif (tr and br) and not self.is_in_object:
+                #
+                #     if not ((0 <= angle <= math.pi / 2) or (((3 * math.pi) / 2) <= angle < (2 * math.pi))):
+                #         print("out of range!")
+                #
+                #     elif angle < (math.pi / 2):
+                #         angle = math.pi - angle
+                #
+                #     else:
+                #         angle = (2 * math.pi) - (angle - math.pi)
+                #
+                #     self.nextpos = calcnewpos(self.rect, (angle, z))
+                #     if self.nextpos.colliderect(player.rect):
+                #         self.is_in_object = True
+                #
+
+
+                if not self.is_in_object:
+
+                    # going southeast
+                    if 0 < angle < (math.pi / 2):
+                        # hits left side
+                        if tr:
+                            angle = math.pi - angle
+
+                        # hits top
+                        elif br:
+                            angle = (2 * math.pi) - angle
+
+                        # ruh roh
+                        else:
+                            print("ruh roh")
+
+                    # going southwest
+                    elif angle < math.pi:
+                        # hits right side
+                        if tl:
+                            angle = math.pi - angle
+
+                        # hits top
+                        elif bl:
+                            angle = (2 * math.pi) - angle
+
+                        # ruh roh
+                        else:
+                            print("ruh roh")
+
+                    # going northwest
+                    elif angle < ((3 * math.pi) / 2):
+                        # hits right side
+                        if bl:
+                            angle = (2 * math.pi) - (angle - math.pi)
+
+                        # hits bottom
+                        elif tl:
+                            angle = math.pi - (angle - math.pi)
+
+                        # ruh roh
+                        else:
+                            print("ruh roh")
+
+                    # going northeast
+                    elif angle < (2 * math.pi):
+                        # hits left side
+                        if br:
+                            angle = (2 * math.pi) - (angle - math.pi)
+
+                        # hits bottom
+                        elif tr:
+                            angle = (2 * math.pi) - angle
+
+                        # ruh roh
+                        else:
+                            print("ruh roh")
+
+                    # ruh roh
+                    else:
+                        print("ruh roh raggy")
+
+                    self.nextpos = calcnewpos(self.rect, (angle, z))
+                    if self.nextpos.colliderect(targetbrick.rect):
+                        self.is_in_object = True
+
+                # if (tr and tl) or (br and bl):
+                #     angle = -angle
+                # elif tl or bl or tr or br:
+                #     angle = math.pi - angle
+
 
                 if targetbrick.hp > 0:
                     targetbrick.hp -= 1
@@ -260,7 +394,17 @@ class Ball(pygame.sprite.Sprite):
                 else:
                     targetbrick.image = load_png(str(targetbrick.hp) + ".png")
 
+
+                self.nextpos = calcnewpos(self.rect, (angle, z))
+                if self.nextpos.colliderect(targetbrick.rect):
+                    self.is_in_object = False
+
+
+
+
+
         print(angle)
+        print(self.is_in_object)
         self.vector = (angle, z)
 
 
@@ -310,10 +454,7 @@ def main():
 
     # Initialize ball
 
-    speed = 6
-    rand = 0.1 * random.randint(5, 8)
-
-    ball = Ball((5 * math.pi) / 6)
+    ball = Ball(STARTING_ANGLE)
 
 
     # Initialize bricks
