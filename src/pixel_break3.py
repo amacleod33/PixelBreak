@@ -10,7 +10,9 @@ SIZE = WIDTH, HEIGHT = 512, 640
 LIVES = 5
 
 STARTING_ANGLE = (3 * math.pi) / 4
-STARTING_SPEED = 7
+STARTING_SPEED = 5
+
+PADDLE_SPEED = 7
 
 
 def load_png(name):
@@ -82,7 +84,7 @@ class Paddle(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         screen = pygame.display.get_surface()
         self.area = screen.get_rect()
-        self.speed = 10
+        self.speed = PADDLE_SPEED
         self.state = "still"
         self.reinit()
 
@@ -130,15 +132,13 @@ class Ball(pygame.sprite.Sprite):
         self.lives = LIVES
         self.state = 2
 
-        self.is_in_object = False
+        self.previous_brick = None
 
 
     def update(self):
 
-        if self.is_in_object:
-            newpos = self.nextpos
-        else:
-            newpos = calcnewpos(self.rect, self.vector)
+
+        newpos = calcnewpos(self.rect, self.vector)
 
         self.rect = newpos
         (angle, z) = self.vector
@@ -190,6 +190,12 @@ class Ball(pygame.sprite.Sprite):
                 else:
                     angle = (2 * math.pi) - angle
 
+            else:
+                if angle < math.pi:
+                    angle += math.pi
+                else:
+                    angle -= math.pi
+
         else:
             # Deflate the rectangles so you can't catch a ball behind the bat
             # player.rect.inflate(-3, -3)
@@ -211,7 +217,7 @@ class Ball(pygame.sprite.Sprite):
             # this is for the brick calculations
             targetbrick = pygame.sprite.spritecollideany(self, bricksprite)
 
-            if (br or bl) and not self.is_in_object:
+            if (br or bl):
                 # if not self.hit:
                 #     audio_ball_hit.play()
                 #     angle = -angle
@@ -219,11 +225,26 @@ class Ball(pygame.sprite.Sprite):
                 #     self.hit = not self.hit
 
                 audio_ball_hit.play()
+
                 angle = (2 * math.pi) - angle
 
-                self.nextpos = calcnewpos(self.rect, (angle, z))
-                if self.nextpos.colliderect(player.rect):
-                    self.is_in_object = True
+                if player.state == "moveleft":
+                    # going right, steeper
+                    if angle < math.pi:
+                        angle = angle - ((angle - ((3 * math.pi) / 2)) / 2)
+
+                    # going left, shallower
+                    else:
+                        angle = angle + ((math.pi - angle) / 2)
+
+                elif player.state == "moveright":
+                    # going right, shallower
+                    if angle < math.pi:
+                        angle = angle + (((2 * math.pi) - angle) / 2)
+                    # going left, steeper
+                    else:
+                        angle = angle - ((angle - ((3 * math.pi) / 2)) / 2)
+
 
             # elif (br or bl) and self.is_in_object:
             #     if not (bl or br):
@@ -240,9 +261,11 @@ class Ball(pygame.sprite.Sprite):
             #     audio_ball_hit.play()
             #     angle = math.pi - angle
 
-            elif targetbrick is not None:
+            elif targetbrick is not None and (targetbrick != self.previous_brick):
                 audio_brick_hit.play()
                 self.score += 10
+
+                self.previous_brick = targetbrick
 
                 # I think Alex added this, reassess after fixing other issues
                 # if self.score % 100 == 0 and self.score > 0:
@@ -308,71 +331,67 @@ class Ball(pygame.sprite.Sprite):
                 #
 
 
-                if not self.is_in_object:
 
-                    # going southeast
-                    if 0 < angle < (math.pi / 2):
-                        # hits left side
-                        if tr:
-                            angle = math.pi - angle
 
-                        # hits top
-                        elif br:
-                            angle = (2 * math.pi) - angle
+                # going southeast
+                if 0 < angle < (math.pi / 2):
+                    # hits left side
+                    if tr:
+                        angle = math.pi - angle
 
-                        # ruh roh
-                        else:
-                            print("ruh roh")
-
-                    # going southwest
-                    elif angle < math.pi:
-                        # hits right side
-                        if tl:
-                            angle = math.pi - angle
-
-                        # hits top
-                        elif bl:
-                            angle = (2 * math.pi) - angle
-
-                        # ruh roh
-                        else:
-                            print("ruh roh")
-
-                    # going northwest
-                    elif angle < ((3 * math.pi) / 2):
-                        # hits right side
-                        if bl:
-                            angle = (2 * math.pi) - (angle - math.pi)
-
-                        # hits bottom
-                        elif tl:
-                            angle = math.pi - (angle - math.pi)
-
-                        # ruh roh
-                        else:
-                            print("ruh roh")
-
-                    # going northeast
-                    elif angle < (2 * math.pi):
-                        # hits left side
-                        if br:
-                            angle = (2 * math.pi) - (angle - math.pi)
-
-                        # hits bottom
-                        elif tr:
-                            angle = (2 * math.pi) - angle
-
-                        # ruh roh
-                        else:
-                            print("ruh roh")
+                    # hits top
+                    elif br or bl:
+                        angle = (2 * math.pi) - angle
 
                     # ruh roh
                     else:
-                        print("ruh roh raggy")
+                        print("ruh roh")
 
-                    self.nextpos = calcnewpos(self.rect, (angle, z))
-                    if self.nextpos.colliderect(targetbrick.rect):
-                        self.is_in_object = True
+                # going southwest
+                elif angle < math.pi:
+                    # hits right side
+                    if tl:
+                        angle = math.pi - angle
+
+                    # hits top
+                    elif bl or br:
+                        angle = (2 * math.pi) - angle
+
+                    # ruh roh
+                    else:
+                        print("ruh roh")
+
+                # going northwest
+                elif angle < ((3 * math.pi) / 2):
+                    # hits right side
+                    if bl:
+                        angle = (2 * math.pi) - (angle - math.pi)
+
+                    # hits bottom
+                    elif tl or tr:
+                        angle = math.pi - (angle - math.pi)
+
+                    # ruh roh
+                    else:
+                        print("ruh roh")
+
+                # going northeast
+                elif angle < (2 * math.pi):
+                    # hits left side
+                    if br:
+                        angle = (2 * math.pi) - (angle - math.pi)
+
+                    # hits bottom
+                    elif tr or tl:
+                        angle = (2 * math.pi) - angle
+
+                    # ruh roh
+                    else:
+                        print("ruh roh")
+
+                # ruh roh
+                else:
+                    print("ruh roh raggy")
 
                 # if (tr and tl) or (br and bl):
                 #     angle = -angle
@@ -394,17 +413,8 @@ class Ball(pygame.sprite.Sprite):
                 else:
                     targetbrick.image = load_png(str(targetbrick.hp) + ".png")
 
-
-                self.nextpos = calcnewpos(self.rect, (angle, z))
-                if self.nextpos.colliderect(targetbrick.rect):
-                    self.is_in_object = False
-
-
-
-
-
         print(angle)
-        print(self.is_in_object)
+        print(self.previous_brick)
         self.vector = (angle, z)
 
 
@@ -924,6 +934,9 @@ def main():
                 bricks.empty()
             game_over_surface = load_png('title.png')
             game_over_pos = game_over_surface.get_rect(centerx=background.get_width() / 2)
+
+            ball.lives = LIVES
+            ball.score = 0
 
 
             background.fill((0, 0, 0))
