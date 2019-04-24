@@ -9,10 +9,14 @@ import struct
 SIZE = WIDTH, HEIGHT = 512, 640
 LIVES = 5
 
-STARTING_ANGLE = (3 * math.pi) / 4
-STARTING_SPEED = 6
+PADDLE_SPEED = 16
 
-PADDLE_SPEED = 8
+STARTING_SPEED = 9
+STARTING_ANGLE = (3 * math.pi) / 4
+
+BALL_STARTING_X = 300
+BALL_STARTING_Y = 556
+
 
 
 def load_png(name):
@@ -123,7 +127,7 @@ class Ball(pygame.sprite.Sprite):
         self.image = load_png('ball.png')
         self.rect = self.image.get_rect()
         screen = pygame.display.get_surface()
-        self.rect.center = (320, 420)
+        self.rect.center = (BALL_STARTING_X, BALL_STARTING_Y)
         self.area = screen.get_rect()
         self.speed = STARTING_SPEED
         self.vector = (angle, self.speed)
@@ -133,6 +137,7 @@ class Ball(pygame.sprite.Sprite):
         self.state = 2
 
         self.previous_brick = None
+        self.just_hit_paddle = False
 
 
     def update(self):
@@ -144,35 +149,52 @@ class Ball(pygame.sprite.Sprite):
         (angle, z) = self.vector
 
         if not self.area.contains(newpos):
-            tl = not self.area.collidepoint(newpos.topleft)
-            tr = not self.area.collidepoint(newpos.topright)
-            bl = not self.area.collidepoint(newpos.bottomleft)
-            br = not self.area.collidepoint(newpos.bottomright)
-            if bl and br:
+            # tl = not self.area.collidepoint(newpos.topleft)
+            # tr = not self.area.collidepoint(newpos.topright)
+            # bl = not self.area.collidepoint(newpos.bottomleft)
+            # br = not self.area.collidepoint(newpos.bottomright)
+
+            # hits bottom
+            if self.rect.bottomleft[1] > HEIGHT:
+
+                print("\n\nhits bottom\n\n")
+                print("setting to false!")
+                self.just_hit_paddle = False
+
                 self.lives -= 1
                 if self.lives < 1:
                     self.state = 2
+
                 else:
-                    self.rect.x = 320
-                    self.rect.y = 420
+                    self.rect.x = BALL_STARTING_X
+                    self.rect.y = BALL_STARTING_Y
                     angle = STARTING_ANGLE
                     z = STARTING_SPEED
                     player.reinit()
 
-            # hits left side of screen
-            elif (tl and bl):
 
-                if not ((math.pi / 2) <= angle <= (3 * math.pi) / 2):
-                    print("out of range!")
+            # hits top
+            elif self.rect.topleft[1] < 0:
 
-                elif angle < math.pi:
-                    angle = math.pi - angle
+                print("\n\nhits top\n\n")
 
+                print("setting to false!")
+                self.just_hit_paddle = False
+
+                if angle < ((3 * math.pi) / 2):
+                    angle = math.pi - (angle - math.pi)
                 else:
-                    angle = (2 * math.pi) - (angle - math.pi)
+                    angle = (2 * math.pi) - angle
 
-            # hits right side of screen
-            elif (tr and br):
+
+
+            # hits right
+            elif self.rect.midright[0] > WIDTH:
+
+                print("\n\nhits right\n\n")
+
+                print("setting to false!")
+                self.just_hit_paddle = False
 
                 if not ((0 <= angle <= math.pi / 2) or (((3 * math.pi) / 2) <= angle < (2 * math.pi))):
                     print("out of range!")
@@ -184,18 +206,76 @@ class Ball(pygame.sprite.Sprite):
                     angle = (2 * math.pi) - (angle - math.pi)
 
 
-            # hits top of screen
-            elif tr and tl:
-                if angle < ((3 * math.pi) / 2):
-                    angle = math.pi - (angle - math.pi)
+            # hits left
+            elif self.rect.midleft[0] < 0:
+
+                print("setting to false!")
+                self.just_hit_paddle = False
+
+                print("\n\nhits left\n\n")
+
+                if not ((math.pi / 2) <= angle <= (3 * math.pi) / 2):
+                    print("out of range!")
+
+                elif angle < math.pi:
+                    angle = math.pi - angle
+
                 else:
-                    angle = (2 * math.pi) - angle
+                    angle = (2 * math.pi) - (angle - math.pi)
+
+            # # hits left side of screen
+            # if (tl and bl):
+            #
+            #     if not ((math.pi / 2) <= angle <= (3 * math.pi) / 2):
+            #         print("out of range!")
+            #
+            #     elif angle < math.pi:
+            #         angle = math.pi - angle
+            #
+            #     else:
+            #         angle = (2 * math.pi) - (angle - math.pi)
+            #
+            # # hits right side of screen
+            # elif (tr and br):
+            #
+            #     if not ((0 <= angle <= math.pi / 2) or (((3 * math.pi) / 2) <= angle < (2 * math.pi))):
+            #         print("out of range!")
+            #
+            #     elif angle < (math.pi / 2):
+            #         angle = math.pi - angle
+            #
+            #     else:
+            #         angle = (2 * math.pi) - (angle - math.pi)
+            #
+            #
+            # # hits top of screen
+            # elif tr and tl:
+            #     if angle < ((3 * math.pi) / 2):
+            #         angle = math.pi - (angle - math.pi)
+            #     else:
+            #         angle = (2 * math.pi) - angle
+            #
+            # # hits bottom of screen
+            # elif bl and br:
+            #     self.lives -= 1
+            #     if self.lives < 1:
+            #         self.state = 2
+            #     else:
+            #         self.rect.x = 320
+            #         self.rect.y = 420
+            #         angle = STARTING_ANGLE
+            #         z = STARTING_SPEED
+            #         player.reinit()
+
 
             else:
                 if angle < math.pi:
                     angle += math.pi
                 else:
                     angle -= math.pi
+
+
+
 
         else:
             # Deflate the rectangles so you can't catch a ball behind the bat
@@ -210,39 +290,36 @@ class Ball(pygame.sprite.Sprite):
             # tl = player.rect.collidepoint(newpos.topleft)
             # tr = player.rect.collidepoint(newpos.topright)
 
-
-
-            bl = player.rect.collidepoint(newpos.bottomleft)
-            br = player.rect.collidepoint(newpos.bottomright)
-
             # this is for the brick calculations
             targetbrick = pygame.sprite.spritecollideany(self, bricksprite)
 
-            if (br or bl):
+            if (player.rect.colliderect(newpos)) and (not self.just_hit_paddle):
                 # if not self.hit:
                 #     audio_ball_hit.play()
                 #     angle = -angle
                 # else:
                 #     self.hit = not self.hit
 
+                print("setting to true!")
+                self.just_hit_paddle = True
                 audio_ball_hit.play()
 
                 angle = (2 * math.pi) - angle
 
                 if player.state == "moveleft":
-                    # going right, steeper
+                    # ball going right, steeper
                     if angle < math.pi:
                         angle = angle - ((angle - ((3 * math.pi) / 2)) / 2)
 
-                    # going left, shallower
+                    # ball going left, shallower
                     else:
                         angle = angle + ((math.pi - angle) / 2)
 
                 elif player.state == "moveright":
-                    # going right, shallower
+                    # ball going right, shallower
                     if angle < math.pi:
                         angle = angle + (((2 * math.pi) - angle) / 2)
-                    # going left, steeper
+                    # ball going left, steeper
                     else:
                         angle = angle - ((angle - ((3 * math.pi) / 2)) / 2)
 
@@ -267,6 +344,9 @@ class Ball(pygame.sprite.Sprite):
                 self.score += 10
 
                 self.previous_brick = targetbrick
+                print("setting to false!")
+                self.just_hit_paddle = False
+
 
                 # I think Alex added this, reassess after fixing other issues
                 # if self.score % 100 == 0 and self.score > 0:
@@ -416,6 +496,7 @@ class Ball(pygame.sprite.Sprite):
 
             else:
                 self.previous_brick = None
+
 
         print(angle)
         print(self.previous_brick)
@@ -908,7 +989,7 @@ def main():
 
                 elif event.key == pygame.K_RETURN:
                     if ball.state == 2:
-                        ball.lives = 5
+                        ball.lives = LIVES
                         ball.score = 0
 
                         background.fill((0, 0, 0))
@@ -928,9 +1009,24 @@ def main():
 
                         ball.state = 0
 
-                if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
+
+                elif event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
                     return
 
+                elif event.key == pygame.K_r:
+                    ball.image = load_png("rabbototo.png")
+
+                elif event.key == pygame.K_e:
+                    ball.image = load_png("ball.png")
+
+                elif event.key == pygame.K_9:
+                    ball.lives += 9
+
+                elif event.key == pygame.K_0:
+                    if ball.vector[1] > 4:
+                        ball.vector = (ball.vector[0], 4)
+                    else:
+                        ball.vector = (ball.vector[0], STARTING_SPEED)
 
             # what? did I write this? this is stupid
             elif event.type == pygame.KEYUP:
@@ -1038,7 +1134,7 @@ def main():
         if ball.state < 1:
 
             # next level
-            if not bricksprite:
+            if (not bricksprite) and ball.just_hit_paddle:
                 print("thinks bricksprite is empty!")
                 bricksprite.empty()
                 level += 1
