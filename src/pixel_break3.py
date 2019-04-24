@@ -1022,9 +1022,15 @@ def main():
                 elif event.key == pygame.K_9:
                     ball.lives += 9
 
-                elif event.key == pygame.K_0:
+                elif event.key == pygame.K_m:
                     if ball.vector[1] > 4:
                         ball.vector = (ball.vector[0], 4)
+                    else:
+                        ball.vector = (ball.vector[0], STARTING_SPEED)
+
+                elif event.key == pygame.K_n:
+                    if ball.vector[1] < 20:
+                        ball.vector = (ball.vector[0], 20)
                     else:
                         ball.vector = (ball.vector[0], STARTING_SPEED)
 
