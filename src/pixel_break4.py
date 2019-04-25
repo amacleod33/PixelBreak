@@ -1,6 +1,7 @@
 # Written by Nick Napora and Alex MacLeod for CPSC 250L Spring 2019 at Christopher Newport University
 # Assignment written by Matthew Bartgis
 # Adapted from Tom's Pong
+# Rabbototo character created by Nick Napora
 
 import math
 import os
